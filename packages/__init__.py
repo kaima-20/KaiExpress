@@ -36,6 +36,9 @@ def create_app():
     )
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-this-secret")
+    app.config["PAYSTACK_SECRET_KEY"] = os.getenv("PAYSTACK_SECRET_KEY", "")
+    app.config["PAYSTACK_PUBLIC_KEY"] = os.getenv("PAYSTACK_PUBLIC_KEY", "")
+    app.config["PAYSTACK_TEST_MODE"] = True
 
     basedir = os.path.abspath(os.path.dirname(__file__))
     database_url = os.getenv("DATABASE_URL")
@@ -131,50 +134,99 @@ def upgrade_schema(db):
 def seed_catalog(db, User, MenuItem):
     catalog = [
         {
-            "name": "Ember & Crust",
-            "email": "ember@kaiexpress.demo",
-            "cuisine": "Wood-fired pizza",
-            "city": "Chicago",
+            "name": "Lagos Grill House",
+            "email": "lagos@kaiexpress.demo",
+            "cuisine": "Lagos favourites",
+            "city": "Lagos",
             "items": [
-                ("Ember Margherita", "San Marzano tomato, basil, and fresh mozzarella.", 11.50),
-                ("Smoky Pepperoni", "Crisp pepperoni, roasted peppers, and hot honey drizzle.", 14.00),
-                ("Truffle Mushroom", "Garlic mushrooms, parmesan, and truffle cream.", 15.50),
+                ("Jollof Rice & Chicken", "Rich tomato rice with grilled chicken, peppers, and aromatic spices.", 12.50),
+                ("Ewa Agoyin", "Creamy beans served with pepper sauce and plantain.", 8.50),
+                ("Ofada Rice & Ayamase", "Local rice served with green pepper stew and grilled protein.", 11.75),
+                ("Seafood Pepper Soup", "Spicy seafood broth with prawns, fish, and fresh peppers.", 13.50),
             ],
         },
         {
-            "name": "Harbor & Hearth",
-            "email": "miso@kaiexpress.demo",
-            "cuisine": "American steakhouse",
-            "city": "New York",
+            "name": "Anambra Pot Kitchen",
+            "email": "anambra@kaiexpress.demo",
+            "cuisine": "Anambra specialities",
+            "city": "Awka",
             "items": [
-                ("Herb Butter Ribeye", "Prime ribeye with roasted potatoes and charred greens.", 27.00),
-                ("Crispy Chicken Club", "Grilled chicken, bacon, lettuce, tomato, and aioli.", 16.25),
-                ("Maple Glazed Salmon", "Seared salmon with lemon rice and seasonal veg.", 21.75),
+                ("Nkwobi", "Cow foot in a spicy palm-oil sauce with herbs.", 9.75),
+                ("Abacha", "African salad with ukpaka, palm oil, and traditional toppings.", 7.50),
+                ("Ofe Nsala", "White soup with catfish, spices, and fresh herbs.", 10.50),
+                ("Isi Ewu", "Goat meat in a rich peppery sauce.", 11.25),
             ],
         },
         {
-            "name": "The Green Table",
-            "email": "green@kaiexpress.demo",
-            "cuisine": "Fresh salads & bowls",
-            "city": "Los Angeles",
+            "name": "Enugu Heritage Kitchen",
+            "email": "enugu@kaiexpress.demo",
+            "cuisine": "Enugu soups & staples",
+            "city": "Enugu",
             "items": [
-                ("Citrus Chicken Bowl", "Herb chicken, avocado, grains, and lemon vinaigrette.", 12.50),
-                ("Roasted Veggie Bowl", "Seasonal vegetables, hummus, grains, and herbs.", 10.75),
-                ("Mango Lime Cooler", "Fresh mango, lime, mint, and sparkling water.", 4.50),
+                ("Okpa", "Cornmeal wrapped dish with rich traditional seasoning.", 8.00),
+                ("Abacha", "African salad prepared with fresh vegetables and pepper mix.", 7.50),
+                ("Oha Soup & Fufu", "Green leafy soup with yam flour and assorted meat.", 12.00),
+                ("Nsala Soup", "Peppery catfish soup with fresh spices.", 10.75),
             ],
         },
         {
-            "name": "Starlight Diner",
-            "email": "streetbites@kaiexpress.demo",
-            "cuisine": "American comfort food",
-            "city": "Austin",
+            "name": "Imo Family Feast",
+            "email": "imo@kaiexpress.demo",
+            "cuisine": "Imo classics",
+            "city": "Owerri",
             "items": [
-                ("Classic Smash Burger", "Two seared beef patties, cheddar, pickles, and burger sauce.", 10.50),
-                ("Buffalo Chicken Sandwich", "Crispy chicken, slaw, and spicy ranch in a toasted bun.", 11.25),
-                ("Loaded Fries", "Crispy fries with cheddar, scallions, and smoky aioli.", 8.75),
-                ("Spicy Buffalo Wings", "Juicy wings tossed in a bold house buffalo glaze.", 9.25),
-                ("Bistro Chicken Caesar", "Grilled chicken, romaine, parmesan, and crisp croutons.", 12.00),
-                ("House Lemonade", "Freshly squeezed lemon, mint, and sparkling water.", 4.25),
+                ("Ofe Owerri", "Traditional soup with banga flavour and assorted meat.", 11.50),
+                ("Ukpaka", "Local delicacy with savoury seasoning and starch.", 9.25),
+                ("Egusi & Fufu", "Ground melon soup with rich seasoning and pounded yam.", 12.50),
+                ("Pepper Soup", "Spicy soup with chicken, goat meat, and herbs.", 10.25),
+            ],
+        },
+        {
+            "name": "Rivers Seafood Hub",
+            "email": "rivers@kaiexpress.demo",
+            "cuisine": "Rivers seafood",
+            "city": "Port Harcourt",
+            "items": [
+                ("Banga Soup", "Palm kernel soup with fresh fish and herbs.", 11.00),
+                ("Native Jollof", "Traditional rice with rich flavour and local seasoning.", 12.50),
+                ("Fisherman's Soup", "Seafood medley with okra and pepper base.", 13.25),
+                ("Seafood Okro", "Fresh okra soup with prawns, fish, and spices.", 12.75),
+            ],
+        },
+        {
+            "name": "Kano Saffron Kitchen",
+            "email": "kano@kaiexpress.demo",
+            "cuisine": "Northern staples",
+            "city": "Kano",
+            "items": [
+                ("Tuwo Shinkafa", "Soft rice pudding served with soup and grilled meat.", 10.50),
+                ("Miyan Kuka", "Soup made with dried okra leaves and protein.", 9.75),
+                ("Suya", "Spiced grilled meat served with onion and peppers.", 8.50),
+                ("Masa", "Fermented rice cake with a soft, airy centre.", 7.25),
+            ],
+        },
+        {
+            "name": "Ibadan Heritage Table",
+            "email": "oyo@kaiexpress.demo",
+            "cuisine": "Southwest classics",
+            "city": "Ibadan",
+            "items": [
+                ("Amala & Ewedu", "Smooth yam flour swallow with green vegetable sauce.", 9.00),
+                ("Gbegiri", "Bean soup with rich local seasoning.", 8.75),
+                ("Ofada Rice", "Local rice and stew with a rich pepper base.", 10.25),
+                ("Peppered Meat", "Well-seasoned grilled meat with peppers and onions.", 11.50),
+            ],
+        },
+        {
+            "name": "Global Bites Studio",
+            "email": "global@kaiexpress.demo",
+            "cuisine": "A Taste of the World",
+            "city": "Lagos",
+            "items": [
+                ("Chicken Ramen", "Comforting noodles with roasted chicken and savoury broth.", 14.25),
+                ("Bibimbap", "Korean mixed rice bowl with vegetables and protein.", 13.50),
+                ("Margherita Pizza", "Classic pizza with tomato base and mozzarella.", 12.75),
+                ("Crêpes", "Thin pancakes filled with sweet or savoury toppings.", 8.50),
             ],
         },
     ]

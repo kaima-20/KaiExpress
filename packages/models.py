@@ -106,7 +106,7 @@ class Order(db.Model):
 
     payment_method = db.Column(db.String(30))
 
-    payment_reference = db.Column(db.String(40), unique=True)
+    payment_reference = db.Column(db.String(120), unique=True)
 
     paid_at = db.Column(db.DateTime)
 

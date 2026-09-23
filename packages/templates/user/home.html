@@ -1,54 +1,188 @@
 {% extends "base.html" %}
 
-{% block title %}KaiExpress | Food, your way{% endblock %}
+{% block title %}KaiExpress | Taste Nigeria. Discover the World.{% endblock %}
 
 {% block content %}
-<section class="hero-panel p-4 p-lg-5 mb-5">
+<section class="hero-panel">
   <div class="row align-items-center g-4">
     <div class="col-lg-7">
-      <span class="eyebrow">DELIVERY, YOUR WAY</span>
-      <h1 class="display-4 fw-bold mt-3 mb-3">What are you craving today?</h1>
-      <p class="hero-copy mb-0">From artisan burgers and wood-fired pizza to creamy pasta and gourmet brunch, find your next favourite comfort meal and get it brought to your door.</p>
+      <span class="eyebrow" style="color: rgba(255,255,255,0.7);">Fresh. authentic. delivered</span>
+      <h1 class="mt-3 mb-3">Taste Nigeria. Discover the World.</h1>
+      <p class="hero-copy mb-0">Authentic Nigerian dishes from across the states, delivered to your doorstep with warmth, flavour, and convenience.</p>
+      <div class="hero-actions">
+        <a href="#menu" class="btn btn-light">Order Now</a>
+        <a href="#restaurants" class="btn btn-outline-light">Explore Restaurants</a>
+      </div>
+      <div class="hero-metrics">
+        <div class="metric-box"><strong>30+</strong><span>Popular dishes</span></div>
+        <div class="metric-box"><strong>10+</strong><span>Nigerian states</span></div>
+        <div class="metric-box"><strong>15-35</strong><span>Minutes delivery</span></div>
+      </div>
     </div>
     <div class="col-lg-5">
       <form class="search-box" action="{{ url_for('home') }}" method="get">
         <label class="visually-hidden" for="restaurant-search">Search restaurants or cuisines</label>
         <span class="search-icon" aria-hidden="true">⌕</span>
-        <input id="restaurant-search" name="q" value="{{ search }}" placeholder="Search restaurants, dishes..." autocomplete="off">
+        <input id="restaurant-search" name="q" value="{{ search }}" placeholder="Search jollof, suya, abacha..." autocomplete="off">
         <button type="submit">Search</button>
       </form>
-      <p class="search-hint mb-0 mt-2">Try “burger”, “pasta”, or a city</p>
+      <p class="search-hint mb-0">Try “jollof”, “ofada”, “suya”, or “abacha”</p>
     </div>
   </div>
 </section>
 
-<div class="category-strip mb-5">
-  <a class="category-chip {% if not active_cuisine %}active{% endif %}" href="{{ url_for('home') }}"><span>✦</span> All kitchens</a>
-  {% for category in cuisines %}
-  <a class="category-chip {% if active_cuisine == category %}active{% endif %}" href="{{ url_for('home', cuisine=category) }}"><span class="category-icon">{{ loop.index }}</span>{{ category }}</a>
-  {% endfor %}
+<div class="section-shell" id="menu">
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">Explore Nigerian cuisines</span>
+      <h2 class="mt-2 mb-0">From the heart of Nigeria</h2>
+    </div>
+  </div>
+
+  <div class="category-strip mb-4">
+    <a class="category-chip {% if not active_cuisine %}active{% endif %}" href="{{ url_for('home') }}"><span>✦</span> All kitchens</a>
+    {% for category in cuisines %}
+    <a class="category-chip {% if active_cuisine == category %}active{% endif %}" href="{{ url_for('home', cuisine=category) }}"><span class="category-icon">{{ loop.index }}</span>{{ category }}</a>
+    {% endfor %}
+  </div>
 </div>
-<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-  <div><span class="eyebrow text-primary">NEARBY AND READY</span><h2 class="h1 mt-2 mb-0">Popular around you</h2></div>
-  <span class="result-count">{{ restaurants|length }} kitchens</span>
+
+<div class="section-shell">
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">Popular Nigerian dishes</span>
+      <h2 class="mt-2 mb-0">Taste the classics</h2>
+    </div>
+    <span class="section-subtitle">Loved by families, gatherings, and everyday cravings.</span>
+  </div>
+
+  <div class="state-grid">
+    <div class="state-card"><strong>Jollof Rice</strong><span class="state-badge">L</span></div>
+    <div class="state-card"><strong>Suya</strong><span class="state-badge">N</span></div>
+    <div class="state-card"><strong>Ofada Rice</strong><span class="state-badge">S</span></div>
+    <div class="state-card"><strong>Abacha</strong><span class="state-badge">A</span></div>
+    <div class="state-card"><strong>Amala</strong><span class="state-badge">SW</span></div>
+    <div class="state-card"><strong>Nsala Soup</strong><span class="state-badge">E</span></div>
+    <div class="state-card"><strong>Banga Soup</strong><span class="state-badge">R</span></div>
+    <div class="state-card"><strong>Tuwo Shinkafa</strong><span class="state-badge">N</span></div>
+    <div class="state-card"><strong>Fisherman Soup</strong><span class="state-badge">C</span></div>
+    <div class="state-card"><strong>Afang Soup</strong><span class="state-badge">AK</span></div>
+  </div>
 </div>
-<div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-  {% for restaurant in restaurants %}
-  <div class="col">
-    <article class="card restaurant-card h-100 shadow-sm">
-      <div class="restaurant-art restaurant-art-{{ (loop.index0 % 4) + 1 }}"><span>{{ '%02d'|format(loop.index) }}</span><small>DELIVERS IN<br><strong>{{ 20 + loop.index * 5 }}–{{ 30 + loop.index * 5 }} MIN</strong></small></div>
-      <div class="card-body d-flex flex-column p-4">
-        <div class="d-flex justify-content-between gap-3 align-items-start">
-          <div><h3 class="h4 card-title mb-1">{{ restaurant.name }}</h3><p class="restaurant-cuisine mb-0">{{ restaurant.cuisine }}</p></div>
+
+<div class="section-shell">
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">Explore by state</span>
+      <h2 class="mt-2 mb-0">A taste of every region</h2>
+    </div>
+  </div>
+
+  <div class="state-grid">
+    <div class="state-card"><strong>Lagos</strong><span class="state-badge">LA</span></div>
+    <div class="state-card"><strong>Anambra</strong><span class="state-badge">AN</span></div>
+    <div class="state-card"><strong>Enugu</strong><span class="state-badge">EN</span></div>
+    <div class="state-card"><strong>Imo</strong><span class="state-badge">IM</span></div>
+    <div class="state-card"><strong>Rivers</strong><span class="state-badge">RV</span></div>
+    <div class="state-card"><strong>Cross River</strong><span class="state-badge">CR</span></div>
+    <div class="state-card"><strong>Akwa Ibom</strong><span class="state-badge">AK</span></div>
+    <div class="state-card"><strong>Oyo</strong><span class="state-badge">OY</span></div>
+    <div class="state-card"><strong>Kano</strong><span class="state-badge">KN</span></div>
+    <div class="state-card"><strong>Abuja</strong><span class="state-badge">AB</span></div>
+  </div>
+</div>
+
+<div class="section-shell" id="restaurants">
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">Popular near you</span>
+      <h2 class="mt-2 mb-0">Favourite kitchens</h2>
+    </div>
+    <span class="result-count">{{ restaurants|length }} kitchens</span>
+  </div>
+
+  <div class="restaurant-grid">
+    {% for restaurant in restaurants %}
+    <article class="restaurant-card">
+      <div class="restaurant-image" style="background-image: url('{{ [
+        'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80'
+      ][loop.index0 % 5] }}');"></div>
+      <div class="restaurant-card-content">
+        <div class="card-topline">
+          <div>
+            <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+            <p class="restaurant-cuisine">{{ restaurant.cuisine }}</p>
+          </div>
           <span class="rating">4.8</span>
         </div>
-        <p class="card-text text-body-secondary mt-3 mb-4"><span class="status-dot"></span> {{ restaurant.city }} <span class="mx-1">&middot;</span> {{ restaurant.menu_items|length }} menu items</p>
-        <a href="{{ url_for('restaurant_page', restaurant_id=restaurant.id) }}" class="btn btn-dark mt-auto">View menu <span aria-hidden="true">&rarr;</span></a>
+        <div class="card-meta">
+          <span class="status-dot"></span>
+          <span>{{ restaurant.city }}</span>
+          <span>&middot;</span>
+          <span>{{ restaurant.menu_items|length }} items</span>
+        </div>
+        <div class="card-action">
+          <span class="price-tag">₦{{ '%.0f'|format((restaurant.menu_items|sum(attribute='price') / (restaurant.menu_items|length or 1)) * 1.2) }}</span>
+          <a href="{{ url_for('restaurant_page', restaurant_id=restaurant.id) }}" class="btn btn-dark">View menu</a>
+        </div>
       </div>
     </article>
+    {% else %}
+    <div class="col-12"><div class="empty-state"><h3>No kitchens yet</h3><p class="text-body-secondary mb-0">Check back soon for new Nigerian kitchen partners.</p></div></div>
+    {% endfor %}
   </div>
-  {% else %}
-  <div class="col-12"><div class="empty-state text-center p-5"><h3>No kitchens yet</h3><p class="text-body-secondary mb-0">Check back soon for new Western kitchen partners.</p></div></div>
-  {% endfor %}
+</div>
+
+<div class="world-banner" id="about">
+  <div class="world-banner-inner">
+    <div class="world-banner-copy">
+      <span class="eyebrow">A Taste of the World</span>
+      <h3>Premium comfort food, with a global twist.</h3>
+      <p>While Nigerian cuisine remains the heart of KaiExpress, we also bring a few carefully selected international favourites for variety, comfort, and discovery.</p>
+      <div class="world-badges">
+        <span>Chicken Ramen</span>
+        <span>Bibimbap</span>
+        <span>Margherita Pizza</span>
+        <span>Crêpes</span>
+      </div>
+    </div>
+    <div class="world-image" aria-label="International meals"></div>
+  </div>
+</div>
+
+<div class="section-shell">
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">Why choose KaiExpress</span>
+      <h2 class="mt-2 mb-0">Food you can trust</h2>
+    </div>
+  </div>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">✓</div>
+      <h3>Authentic Nigerian meals</h3>
+      <p>From Lagos classics to regional soups and rice dishes, every order celebrates genuine flavours and local favourites.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⏱</div>
+      <h3>Fast delivery</h3>
+      <p>We work with trusted kitchens and delivery partners to keep your order moving quickly and reliably.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💳</div>
+      <h3>Easy secure payment</h3>
+      <p>Pay with Paystack and enjoy a smooth checkout on a hosted payment page designed to keep your details secure.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🍲</div>
+      <h3>Fresh and prepared with care</h3>
+      <p>Every kitchen focuses on quality ingredients, proper seasoning, and dishes that are made to be enjoyed.</p>
+    </div>
+  </div>
 </div>
 {% endblock %}

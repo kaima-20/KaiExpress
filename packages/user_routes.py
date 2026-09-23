@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
+import requests
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy.exc import IntegrityError
@@ -28,6 +29,40 @@ def positive_int(value, default=0):
 
 
 def init_user_routes(app, db, User, MenuItem, Order):
+    def get_order_total(order):
+        return round((float(order.price or 0) * int(order.quantity or 1)), 2)
+
+    def paystack_headers():
+        return {
+            "Authorization": f"Bearer {app.config.get('PAYSTACK_SECRET_KEY', '')}",
+            "Content-Type": "application/json",
+        }
+
+    def verify_paystack_payment(reference):
+        secret_key = app.config.get("PAYSTACK_SECRET_KEY")
+        if not secret_key:
+            return {"status": False, "message": "Paystack secret key is not configured."}
+
+        response = requests.get(
+            f"https://api.paystack.co/transaction/verify/{reference}",
+            headers=paystack_headers(),
+            timeout=30,
+        )
+        data = response.json()
+        if response.status_code != 200 or not data.get("status"):
+            return {
+                "status": False,
+                "message": data.get("message", "Paystack verification failed."),
+            }
+
+        payload = data.get("data") or {}
+        return {
+            "status": payload.get("status") == "success",
+            "message": payload.get("gateway_response") or data.get("message"),
+            "reference": payload.get("reference"),
+            "amount": payload.get("amount"),
+        }
+
     @app.route("/api/restaurants")
     def api_restaurants():
         restaurants = User.query.filter_by(is_restaurant=True).order_by(User.name.asc()).all()
@@ -139,7 +174,7 @@ def init_user_routes(app, db, User, MenuItem, Order):
         orders = Order.query.filter_by(customer_id=current_user.id).order_by(Order.created_at.desc()).all()
         return render_template("user/orders.html", orders=orders)
 
-    @app.route("/orders/<int:order_id>/checkout", methods=["GET", "POST"])
+    @app.route("/orders/<int:order_id>/checkout", methods=["GET"]) 
     @login_required
     def payment_checkout(order_id):
         if current_user.is_restaurant:
@@ -150,42 +185,99 @@ def init_user_routes(app, db, User, MenuItem, Order):
             flash("This order has already been paid.", "info")
             return redirect(url_for("orders"))
 
-        if request.method == "POST":
-            payment_method = request.form.get("payment_method", "").strip()
-            allowed_methods = {"card", "mobile_money", "cash_on_delivery"}
-            if payment_method not in allowed_methods:
-                flash("Choose a payment method to continue.", "warning")
-                return redirect(url_for("payment_checkout", order_id=order.id))
+        return render_template("user/payment.html", order=order)
 
-            if payment_method == "card":
-                card_number = "".join(request.form.get("card_number", "").split())
-                card_expiry = request.form.get("card_expiry", "").strip()
-                card_cvc = request.form.get("card_cvc", "").strip()
-                if not card_number.isdigit() or not 12 <= len(card_number) <= 19:
-                    flash("Enter a valid card number.", "warning")
-                    return redirect(url_for("payment_checkout", order_id=order.id))
-                if not card_expiry or not card_cvc.isdigit() or len(card_cvc) not in (3, 4):
-                    flash("Enter a valid expiry date and security code.", "warning")
-                    return redirect(url_for("payment_checkout", order_id=order.id))
-            elif payment_method == "mobile_money":
-                phone = "".join(request.form.get("mobile_number", "").split())
-                if not phone.isdigit() or not 9 <= len(phone) <= 15:
-                    flash("Enter a valid wallet number.", "warning")
-                    return redirect(url_for("payment_checkout", order_id=order.id))
+    @app.route("/orders/<int:order_id>/paystack/initialize", methods=["POST"])
+    @login_required
+    def paystack_initialize(order_id):
+        if current_user.is_restaurant:
+            return redirect(url_for("restaurant_dashboard"))
 
-            order.payment_method = payment_method
-            order.payment_status = "pending" if payment_method == "cash_on_delivery" else "paid"
-            if order.payment_status == "paid":
-                order.paid_at = datetime.utcnow()
-                order.payment_reference = f"KAI-PAY-{uuid4().hex[:12].upper()}"
-            db.session.commit()
-            if order.payment_status == "paid":
-                flash("Payment received. Your order is being prepared.", "success")
-            else:
-                flash("Order confirmed. Payment is due on delivery.", "success")
+        order = Order.query.filter_by(id=order_id, customer_id=current_user.id).first_or_404()
+        if order.payment_status == "paid":
+            flash("This order has already been paid.", "info")
             return redirect(url_for("orders"))
 
-        return render_template("user/payment.html", order=order)
+        secret_key = app.config.get("PAYSTACK_SECRET_KEY")
+        if not secret_key:
+            flash("Paystack is not configured. Add PAYSTACK_SECRET_KEY to your environment variables.", "warning")
+            return redirect(url_for("payment_checkout", order_id=order.id))
+
+        total_amount = int(round(get_order_total(order) * 100))
+        if total_amount <= 0:
+            flash("The order total must be greater than zero before paying.", "warning")
+            return redirect(url_for("payment_checkout", order_id=order.id))
+
+        reference = f"KAI-{order.id}-{uuid4().hex[:12].upper()}"
+        callback_url = url_for("paystack_callback", order_id=order.id, _external=True)
+        payload = {
+            "email": current_user.email,
+            "amount": total_amount,
+            "currency": "NGN",
+            "reference": reference,
+            "callback_url": callback_url,
+            "metadata": {
+                "order_id": order.id,
+                "customer_name": order.customer_name or current_user.name,
+                "total_amount": get_order_total(order),
+            },
+        }
+
+        try:
+            response = requests.post(
+                "https://api.paystack.co/transaction/initialize",
+                json=payload,
+                headers=paystack_headers(),
+                timeout=30,
+            )
+            response_data = response.json()
+        except requests.RequestException as exc:
+            app.logger.error("Paystack init failed: %s", exc)
+            flash(f"Paystack initialization failed: {exc}", "warning")
+            return redirect(url_for("payment_checkout", order_id=order.id))
+
+        if response.status_code != 200 or not response_data.get("status"):
+            message = response_data.get("message") or "Unable to start Paystack payment right now."
+            app.logger.error("Paystack init error: %s", message)
+            flash(message, "warning")
+            return redirect(url_for("payment_checkout", order_id=order.id))
+
+        authorization_url = (response_data.get("data") or {}).get("authorization_url")
+        if not authorization_url:
+            app.logger.error("Paystack response missing authorization_url: %s", response_data)
+            flash("Paystack did not return a valid payment link.", "warning")
+            return redirect(url_for("payment_checkout", order_id=order.id))
+
+        order.payment_method = "paystack"
+        order.payment_reference = reference
+        db.session.commit()
+        return redirect(authorization_url)
+
+    @app.route("/orders/<int:order_id>/paystack/callback", methods=["GET", "POST"])
+    @login_required
+    def paystack_callback(order_id):
+        if current_user.is_restaurant:
+            return redirect(url_for("restaurant_dashboard"))
+
+        order = Order.query.filter_by(id=order_id, customer_id=current_user.id).first_or_404()
+        reference = request.args.get("reference") or request.args.get("trxref")
+
+        if not reference:
+            flash("Payment was cancelled or did not complete. Please try again.", "warning")
+            return redirect(url_for("payment_checkout", order_id=order.id))
+
+        verification = verify_paystack_payment(reference)
+        if verification.get("status"):
+            order.payment_status = "paid"
+            order.payment_method = "paystack"
+            order.payment_reference = reference
+            order.paid_at = datetime.utcnow()
+            db.session.commit()
+            flash("Payment received. Your order is being prepared.", "success")
+            return redirect(url_for("orders"))
+
+        flash("Payment was not successful. Please try again or choose another payment method.", "warning")
+        return redirect(url_for("payment_checkout", order_id=order.id))
 
     @app.route("/api/orders")
     @login_required

@@ -38,7 +38,7 @@
             {% elif order.payment_status == 'pending' and order.payment_method == 'cash_on_delivery' %}
             <span class="badge text-bg-warning">Pay on delivery</span>
             {% else %}
-            <a class="btn btn-sm btn-dark" href="{{ url_for('payment_checkout', order_id=order.id) }}">Checkout</a>
+            <a class="btn btn-sm btn-dark" href="{{ url_for('payment_checkout', order_id=order.id) }}">Pay Now</a>
             {% endif %}
           </td>
       </tr>
