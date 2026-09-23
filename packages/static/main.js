@@ -32,6 +32,10 @@ function bindForm(selector, handler) {
   form.addEventListener('submit', async event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
+    delete data.card_number;
+    delete data.card_expiry;
+    delete data.card_cvc;
+    delete data.mobile_number;
     try {
       const result = await handler(data);
       showAlert(result.message, 'success');
@@ -42,26 +46,63 @@ function bindForm(selector, handler) {
   });
 }
 
-if (document.readyState !== 'loading') {
+function bindCheckout() {
+  const form = document.querySelector('#checkout-form');
+  if (!form) return;
+
+  const item = form.querySelector('[name="item_id"]');
+  const quantity = form.querySelector('[name="quantity"]');
+  const total = form.querySelector('#checkout-total');
+  const cardFields = form.querySelector('#card-payment-fields');
+  const mobileFields = form.querySelector('#mobile-money-fields');
+  const buttonLabel = form.querySelector('#checkout-button-label');
+
+  const updateTotal = () => {
+    const selected = item.options[item.selectedIndex];
+    const price = Number(selected?.textContent.match(/\$([\d.]+)/)?.[1] || 0);
+    total.textContent = `$${(price * Math.max(1, Number(quantity.value) || 1)).toFixed(2)}`;
+  };
+
+  const updatePaymentFields = () => {
+    const method = form.querySelector('[name="payment_method"]:checked')?.value;
+    cardFields.hidden = method !== 'card';
+    mobileFields.hidden = method !== 'mobile_money';
+    cardFields.querySelectorAll('input').forEach(input => { input.required = method === 'card'; });
+    mobileFields.querySelector('input').required = method === 'mobile_money';
+    buttonLabel.textContent = method === 'cash_on_delivery' ? 'Place order' : 'Continue to payment';
+  };
+
+  item.addEventListener('change', updateTotal);
+  quantity.addEventListener('input', updateTotal);
+  form.querySelectorAll('[name="payment_method"]').forEach(input => input.addEventListener('change', updatePaymentFields));
+  updateTotal();
+  updatePaymentFields();
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = Object.fromEntries(new FormData(form).entries());
+    try {
+      const result = await apiPost('/api/checkout', data);
+      showAlert(result.message || 'Your order was submitted.', 'success');
+      if (result.next) window.location.href = result.next;
+    } catch (error) {
+      showAlert(error.message || 'We could not complete checkout.', 'danger');
+    }
+  });
+}
+
+function bindForms() {
+  bindCheckout();
   bindForm('#user-login-form', data => apiPost('/api/login', data));
   bindForm('#user-register-form', data => apiPost('/api/register', data));
   bindForm('#restaurant-login-form', data => apiPost('/api/restaurant/login', data));
   bindForm('#restaurant-register-form', data => apiPost('/api/restaurant/register', data));
-  bindForm('#checkout-form', async data => {
-    const result = await apiPost('/api/checkout', data);
-    return result;
-  });
   bindForm('#logout-form', () => apiPost('/api/logout', {}));
+}
+
+if (document.readyState !== 'loading') {
+  bindForms();
 } else {
-  document.addEventListener('DOMContentLoaded', () => {
-    bindForm('#user-login-form', data => apiPost('/api/login', data));
-    bindForm('#user-register-form', data => apiPost('/api/register', data));
-    bindForm('#restaurant-login-form', data => apiPost('/api/restaurant/login', data));
-    bindForm('#restaurant-register-form', data => apiPost('/api/restaurant/register', data));
-    bindForm('#checkout-form', async data => {
-      const result = await apiPost('/api/checkout', data);
-      return result;
-    });
-    bindForm('#logout-form', () => apiPost('/api/logout', {}));
-  });
+  document.addEventListener('DOMContentLoaded', bindForms);
 }

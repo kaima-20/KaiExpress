@@ -22,7 +22,20 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Cuisine</label>
-            <input type="text" name="cuisine" class="form-control" placeholder="Type of food" required>
+            <input type="text" name="cuisine" class="form-control" list="cuisine-options" placeholder="e.g. Kenyan, Italian, or Korean" required>
+            <datalist id="cuisine-options">
+              <option value="African & Western fast food">
+              <option value="Kenyan">
+              <option value="Ethiopian">
+              <option value="Nigerian">
+              <option value="Indian">
+              <option value="Italian">
+              <option value="Japanese">
+              <option value="Mexican">
+              <option value="American">
+              <option value="Mediterranean">
+            </datalist>
+            <div class="form-text">Any cuisine is welcome. Choose a suggestion or enter your own.</div>
           </div>
           <div class="mb-3">
             <label class="form-label">City</label>

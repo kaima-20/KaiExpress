@@ -88,7 +88,28 @@ def create_app():
 
 def upgrade_schema(db):
     inspector = inspect(db.engine)
-    if "payouts" not in inspector.get_table_names():
+    tables = inspector.get_table_names()
+    if "orders" in tables:
+        order_columns = {column["name"] for column in inspector.get_columns("orders")}
+        with db.engine.begin() as connection:
+            if "payment_status" not in order_columns:
+                connection.execute(text(
+                    "ALTER TABLE orders ADD COLUMN payment_status VARCHAR(20) NOT NULL DEFAULT 'pending'"
+                ))
+            if "payment_method" not in order_columns:
+                connection.execute(text(
+                    "ALTER TABLE orders ADD COLUMN payment_method VARCHAR(30)"
+                ))
+            if "payment_reference" not in order_columns:
+                connection.execute(text(
+                    "ALTER TABLE orders ADD COLUMN payment_reference VARCHAR(40)"
+                ))
+            if "paid_at" not in order_columns:
+                connection.execute(text(
+                    "ALTER TABLE orders ADD COLUMN paid_at DATETIME"
+                ))
+
+    if "payouts" not in tables:
         return
 
     columns = {column["name"] for column in inspector.get_columns("payouts")}
@@ -140,6 +161,22 @@ def seed_catalog(db, User, MenuItem):
                 ("Charred Chicken Bowl", "Herb chicken, avocado, grains, and tahini dressing.", 12.50),
                 ("Roasted Veggie Bowl", "Seasonal vegetables, hummus, grains, and herbs.", 10.75),
                 ("Mango Lime Cooler", "Fresh mango, lime, mint, and sparkling water.", 4.50),
+            ],
+        },
+        {
+            "name": "Street Bites",
+            "email": "streetbites@kaiexpress.demo",
+            "cuisine": "African & Western fast food",
+            "city": "Nairobi",
+            "items": [
+                ("Beef Samosas", "Crisp pastry filled with spiced beef, peas, and fresh herbs.", 5.50),
+                ("Masala Bhajia", "Golden potato slices in a seasoned gram-flour coating.", 4.75),
+                ("Chicken Mishkaki", "Char-grilled spiced chicken skewers with kachumbari.", 8.50),
+                ("Peri-Peri Chicken Wings", "Juicy wings tossed in our bright, smoky peri-peri sauce.", 9.25),
+                ("Loaded Street Fries", "Crispy fries with pulled beef, cheese, and house sauce.", 8.75),
+                ("Smash Burger", "Two seared beef patties, cheddar, pickles, and burger sauce.", 10.50),
+                ("Crispy Chicken Burger", "Buttermilk chicken, slaw, and sweet chili mayo in a toasted bun.", 10.00),
+                ("Mango Passion Cooler", "Fresh mango, passion fruit, lime, and sparkling water.", 4.25),
             ],
         },
     ]

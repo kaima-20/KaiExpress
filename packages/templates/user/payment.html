@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Complete payment | KaiExpress{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+  <div class="payment-intro mb-4">
+    <a class="back-link-dark" href="{{ url_for('orders') }}">&larr; Back to orders</a>
+    <span class="eyebrow text-primary d-block mt-4">SECURE CHECKOUT</span>
+    <h1 class="mt-2 mb-2">Complete your payment</h1>
+    <p class="text-body-secondary mb-0">Review your order and choose how you would like to pay.</p>
+  </div>
+
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-7">
+      <section class="payment-card p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+          <div>
+            <span class="eyebrow text-primary">PAYMENT METHOD</span>
+            <h2 class="h3 mt-2 mb-0">How would you like to pay?</h2>
+          </div>
+          <span class="payment-lock" aria-label="Protected checkout">&#128274;</span>
+        </div>
+
+        <form method="post" id="payment-form">
+          <fieldset>
+            <legend class="visually-hidden">Payment method</legend>
+            <div class="payment-method-list">
+              <label class="payment-method">
+                <input type="radio" name="payment_method" value="card" required>
+                <span class="payment-method-icon">&#9670;</span>
+                <span class="payment-method-copy"><strong>Debit or credit card</strong><small>Visa, Mastercard, or local bank card</small></span>
+                <span class="payment-method-check" aria-hidden="true">&#10003;</span>
+              </label>
+              <label class="payment-method">
+                <input type="radio" name="payment_method" value="mobile_money">
+                <span class="payment-method-icon">&#9742;</span>
+                <span class="payment-method-copy"><strong>Mobile money</strong><small>Pay with your mobile wallet</small></span>
+                <span class="payment-method-check" aria-hidden="true">&#10003;</span>
+              </label>
+              <label class="payment-method">
+                <input type="radio" name="payment_method" value="cash_on_delivery">
+                <span class="payment-method-icon">&#36;</span>
+                <span class="payment-method-copy"><strong>Cash on delivery</strong><small>Pay when your order arrives</small></span>
+                <span class="payment-method-check" aria-hidden="true">&#10003;</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div id="card-payment-fields" class="payment-form-fields mt-4" hidden>
+            <h3 class="h6 mb-3">Card details</h3>
+            <label class="form-label" for="card-number">Card number</label>
+            <input id="card-number" name="card_number" class="form-control mb-3" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" minlength="12" maxlength="19">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label" for="card-expiry">Expiry date</label>
+                <input id="card-expiry" name="card_expiry" class="form-control" autocomplete="cc-exp" placeholder="MM / YY" maxlength="7">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label" for="card-cvc">Security code</label>
+                <input id="card-cvc" name="card_cvc" type="password" class="form-control" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" maxlength="4">
+              </div>
+            </div>
+          </div>
+
+          <div id="mobile-money-fields" class="payment-form-fields mt-4" hidden>
+            <label class="form-label" for="mobile-number">Mobile money number</label>
+            <input id="mobile-number" name="mobile_number" type="tel" class="form-control" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX">
+          </div>
+
+          <button type="submit" class="btn btn-dark w-100 py-3 mt-4"><span id="payment-button-label">Choose a payment method</span> <span aria-hidden="true">&rarr;</span></button>
+          <p class="payment-footnote mb-0 mt-3">Your payment details are used for this checkout only and are never stored by KaiExpress.</p>
+        </form>
+      </section>
+    </div>
+
+    <div class="col-lg-5">
+      <aside class="payment-summary p-4 p-md-5">
+        <span class="eyebrow text-primary">ORDER SUMMARY</span>
+        <h2 class="h3 mt-2 mb-4">{{ order.restaurant.name }}</h2>
+        <div class="summary-item d-flex justify-content-between gap-3">
+          <span>{{ order.menu_item.title }} <small>&times; {{ order.quantity }}</small></span>
+          <strong>${{ '%.2f'|format(order.price * order.quantity) }}</strong>
+        </div>
+        <div class="summary-total d-flex justify-content-between gap-3 mt-4 pt-4">
+          <span>Total</span>
+          <strong>${{ '%.2f'|format(order.price * order.quantity) }}</strong>
+        </div>
+        <div class="summary-meta mt-4 pt-4">
+          <span>Order #{{ order.id }}</span>
+          <span>{{ order.restaurant.city }}</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const paymentForm = document.querySelector('#payment-form');
+  const cardFields = document.querySelector('#card-payment-fields');
+  const mobileFields = document.querySelector('#mobile-money-fields');
+  const paymentButtonLabel = document.querySelector('#payment-button-label');
+  const paymentMethods = paymentForm.querySelectorAll('[name="payment_method"]');
+
+  function updatePaymentForm() {
+    const method = paymentForm.querySelector('[name="payment_method"]:checked')?.value;
+    cardFields.hidden = method !== 'card';
+    mobileFields.hidden = method !== 'mobile_money';
+    cardFields.querySelectorAll('input').forEach(input => { input.required = method === 'card'; });
+    mobileFields.querySelector('input').required = method === 'mobile_money';
+    paymentButtonLabel.textContent = method === 'cash_on_delivery' ? 'Confirm cash on delivery' : method ? 'Pay securely' : 'Choose a payment method';
+  }
+
+  paymentMethods.forEach(method => method.addEventListener('change', updatePaymentForm));
+</script>
+{% endblock %}

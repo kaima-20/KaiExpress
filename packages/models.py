@@ -102,6 +102,14 @@ class Order(db.Model):
 
     price = db.Column(db.Float)
 
+    payment_status = db.Column(db.String(20), nullable=False, default="pending")
+
+    payment_method = db.Column(db.String(30))
+
+    payment_reference = db.Column(db.String(40), unique=True)
+
+    paid_at = db.Column(db.DateTime)
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow

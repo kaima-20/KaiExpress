@@ -23,7 +23,7 @@
     </div>
   </div>
   <div class="col-lg-5">
-    <div class="order-panel p-4 shadow-sm sticky-lg-top">
+      <div class="order-panel p-4 shadow-sm sticky-lg-top">
       <span class="eyebrow text-primary">QUICK CHECKOUT</span><h2 class="h3 mt-2 mb-4">Build your order</h2>
         <form id="checkout-form" action="{{ url_for('place_order', restaurant_id=restaurant.id) }}" method="post">
           <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
@@ -41,9 +41,43 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Quantity</label>
-            <input type="number" name="quantity" class="form-control" min="1" value="1">
+            <input type="number" name="quantity" class="form-control" min="1" value="1" required>
           </div>
-          <button type="submit" class="btn btn-dark w-100 py-3">Place order <span aria-hidden="true">&rarr;</span></button>
+          <div class="checkout-total d-flex justify-content-between align-items-center mb-3">
+            <span>Total to pay</span>
+            <strong id="checkout-total">$0.00</strong>
+          </div>
+          <fieldset class="mb-3">
+            <legend class="form-label mb-2">Payment method</legend>
+            <div class="payment-options">
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="card" required>
+                <span><strong>Card</strong><small>Visa or Mastercard</small></span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="mobile_money">
+                <span><strong>M-Pesa</strong><small>Pay with your phone</small></span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="cash_on_delivery">
+                <span><strong>Cash</strong><small>Pay on delivery</small></span>
+              </label>
+            </div>
+          </fieldset>
+          <div id="card-payment-fields" class="payment-fields mb-3" hidden>
+            <label class="form-label" for="card-number">Card number</label>
+            <input id="card-number" type="text" name="card_number" class="form-control mb-2" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" minlength="12" maxlength="19">
+            <div class="row g-2">
+              <div class="col-6"><input type="text" name="card_expiry" class="form-control" autocomplete="cc-exp" placeholder="MM / YY" maxlength="7" aria-label="Card expiry"></div>
+              <div class="col-6"><input type="password" name="card_cvc" class="form-control" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" maxlength="4" aria-label="Card security code"></div>
+            </div>
+            <small class="text-body-secondary d-block mt-2">Card details are used for this checkout only.</small>
+          </div>
+          <div id="mobile-money-fields" class="payment-fields mb-3" hidden>
+            <label class="form-label" for="mobile-number">M-Pesa phone number</label>
+            <input id="mobile-number" type="tel" name="mobile_number" class="form-control" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX">
+          </div>
+          <button type="submit" class="btn btn-dark w-100 py-3"><span id="checkout-button-label">Continue to payment</span> <span aria-hidden="true">&rarr;</span></button>
         </form>
       </div>
   </div>

@@ -8,7 +8,7 @@
     <div class="col-lg-7">
       <span class="eyebrow">DELIVERY, YOUR WAY</span>
       <h1 class="display-4 fw-bold mt-3 mb-3">What are you craving today?</h1>
-      <p class="hero-copy mb-0">Order from the best local kitchens and get it brought to your door.</p>
+      <p class="hero-copy mb-0">From Kenyan street food to smoky burgers and Japanese comfort bowls, find your next favourite meal and get it brought to your door.</p>
     </div>
     <div class="col-lg-5">
       <form class="search-box" action="{{ url_for('home') }}" method="get">
@@ -36,13 +36,13 @@
   {% for restaurant in restaurants %}
   <div class="col">
     <article class="card restaurant-card h-100 shadow-sm">
-      <div class="restaurant-art"><span>{{ '%02d'|format(loop.index) }}</span><small>DELIVERS IN<br><strong>{{ 20 + loop.index * 5 }}–{{ 30 + loop.index * 5 }} MIN</strong></small></div>
+      <div class="restaurant-art restaurant-art-{{ (loop.index0 % 4) + 1 }}"><span>{{ '%02d'|format(loop.index) }}</span><small>DELIVERS IN<br><strong>{{ 20 + loop.index * 5 }}–{{ 30 + loop.index * 5 }} MIN</strong></small></div>
       <div class="card-body d-flex flex-column p-4">
         <div class="d-flex justify-content-between gap-3 align-items-start">
-          <div><h3 class="h4 card-title mb-1">{{ restaurant.name }}</h3><p class="text-primary small fw-semibold mb-0">{{ restaurant.cuisine }}</p></div>
+          <div><h3 class="h4 card-title mb-1">{{ restaurant.name }}</h3><p class="restaurant-cuisine mb-0">{{ restaurant.cuisine }}</p></div>
           <span class="rating">4.8</span>
         </div>
-        <p class="card-text text-body-secondary mt-3 mb-4"><span class="status-dot"></span> {{ restaurant.city }} <span class="mx-1">&middot;</span> Free delivery over $25</p>
+        <p class="card-text text-body-secondary mt-3 mb-4"><span class="status-dot"></span> {{ restaurant.city }} <span class="mx-1">&middot;</span> {{ restaurant.menu_items|length }} menu items</p>
         <a href="{{ url_for('restaurant_page', restaurant_id=restaurant.id) }}" class="btn btn-dark mt-auto">View menu <span aria-hidden="true">&rarr;</span></a>
       </div>
     </article>

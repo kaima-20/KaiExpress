@@ -1,3 +1,6 @@
+from datetime import datetime
+from uuid import uuid4
+
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy.exc import IntegrityError
@@ -125,7 +128,7 @@ def init_user_routes(app, db, User, MenuItem, Order):
         flash("Your order was submitted successfully.", "success")
 
         if current_user.is_authenticated and not current_user.is_restaurant:
-            return redirect(url_for("orders"))
+            return redirect(url_for("payment_checkout", order_id=order.id))
         return redirect(url_for("restaurant_page", restaurant_id=restaurant_id))
 
     @app.route("/orders")
@@ -135,6 +138,54 @@ def init_user_routes(app, db, User, MenuItem, Order):
             return redirect(url_for("restaurant_dashboard"))
         orders = Order.query.filter_by(customer_id=current_user.id).order_by(Order.created_at.desc()).all()
         return render_template("user/orders.html", orders=orders)
+
+    @app.route("/orders/<int:order_id>/checkout", methods=["GET", "POST"])
+    @login_required
+    def payment_checkout(order_id):
+        if current_user.is_restaurant:
+            return redirect(url_for("restaurant_dashboard"))
+
+        order = Order.query.filter_by(id=order_id, customer_id=current_user.id).first_or_404()
+        if order.payment_status == "paid":
+            flash("This order has already been paid.", "info")
+            return redirect(url_for("orders"))
+
+        if request.method == "POST":
+            payment_method = request.form.get("payment_method", "").strip()
+            allowed_methods = {"card", "mobile_money", "cash_on_delivery"}
+            if payment_method not in allowed_methods:
+                flash("Choose a payment method to continue.", "warning")
+                return redirect(url_for("payment_checkout", order_id=order.id))
+
+            if payment_method == "card":
+                card_number = "".join(request.form.get("card_number", "").split())
+                card_expiry = request.form.get("card_expiry", "").strip()
+                card_cvc = request.form.get("card_cvc", "").strip()
+                if not card_number.isdigit() or not 12 <= len(card_number) <= 19:
+                    flash("Enter a valid card number.", "warning")
+                    return redirect(url_for("payment_checkout", order_id=order.id))
+                if not card_expiry or not card_cvc.isdigit() or len(card_cvc) not in (3, 4):
+                    flash("Enter a valid expiry date and security code.", "warning")
+                    return redirect(url_for("payment_checkout", order_id=order.id))
+            elif payment_method == "mobile_money":
+                phone = "".join(request.form.get("mobile_number", "").split())
+                if not phone.isdigit() or not 9 <= len(phone) <= 15:
+                    flash("Enter a valid mobile money number.", "warning")
+                    return redirect(url_for("payment_checkout", order_id=order.id))
+
+            order.payment_method = payment_method
+            order.payment_status = "pending" if payment_method == "cash_on_delivery" else "paid"
+            if order.payment_status == "paid":
+                order.paid_at = datetime.utcnow()
+                order.payment_reference = f"KAI-PAY-{uuid4().hex[:12].upper()}"
+            db.session.commit()
+            if order.payment_status == "paid":
+                flash("Payment received. Your order is being prepared.", "success")
+            else:
+                flash("Order confirmed. Payment is due on delivery.", "success")
+            return redirect(url_for("orders"))
+
+        return render_template("user/payment.html", order=order)
 
     @app.route("/api/orders")
     @login_required
@@ -150,6 +201,9 @@ def init_user_routes(app, db, User, MenuItem, Order):
                 "item": order.menu_item.title,
                 "quantity": order.quantity,
                 "total": round((order.price or 0) * (order.quantity or 1), 2),
+                "payment_status": order.payment_status,
+                "payment_method": order.payment_method,
+                "checkout_url": url_for("payment_checkout", order_id=order.id),
                 "created_at": order.created_at.isoformat() if order.created_at else None,
             } for order in orders],
         }
@@ -264,8 +318,8 @@ def init_user_routes(app, db, User, MenuItem, Order):
         )
         db.session.add(order)
         db.session.commit()
-        next_url = url_for("orders") if customer_id else url_for("restaurant_page", restaurant_id=restaurant_id)
-        return json_response(True, "Checkout successful.", next=next_url)
+        next_url = url_for("payment_checkout", order_id=order.id) if customer_id else url_for("restaurant_page", restaurant_id=restaurant_id)
+        return json_response(True, "Order created. Complete payment to confirm it.", next=next_url)
 
     @app.route("/api/logout", methods=["POST"])
     def api_logout():
