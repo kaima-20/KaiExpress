@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurant studio | KaiExpress{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1>Restaurant Dashboard</h1>
+    <p class="text-muted">View active orders and restaurant performance.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Back to User View</a>
+    <a href="{{ url_for('restaurant_profile') }}" class="btn btn-outline-secondary">Profile</a>
+    <a href="{{ url_for('restaurant_logout') }}" class="btn btn-outline-danger">Log out</a>
+  </div>
+</div>
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h3>Add a menu item</h3>
+    <form method="post" action="{{ url_for('add_menu_item') }}" class="row g-3">
+      <div class="col-md-4"><label class="form-label">Name</label><input class="form-control" name="title" required></div>
+      <div class="col-md-3"><label class="form-label">Price</label><input class="form-control" name="price" type="number" min="0.01" step="0.01" required></div>
+      <div class="col-md-5"><label class="form-label">Description</label><input class="form-control" name="description" required></div>
+      <div class="col-12"><button class="btn btn-primary" type="submit">Add to menu</button></div>
+    </form>
+  </div>
+</div>
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+  <div class="col"><div class="metric-card p-4 h-100"><span class="eyebrow text-primary">AVAILABLE PAYOUT</span><strong>${{ '%.2f'|format(payout_summary.available) }}</strong><small>after 10% platform fee</small></div></div>
+  <div class="col"><div class="metric-card p-4 h-100"><span class="eyebrow text-primary">GROSS SALES</span><strong>${{ '%.2f'|format(payout_summary.gross) }}</strong><small>from {{ orders|length }} order(s)</small></div></div>
+  <div class="col"><div class="metric-card p-4 h-100"><span class="eyebrow text-primary">PAYOUTS</span><strong>{{ payouts|length }}</strong><small>requests submitted</small></div></div>
+</div>
+<div class="card shadow-sm mb-4 payout-card">
+  <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div><h3 class="h5 mb-1">Get paid for your kitchen</h3><p class="text-body-secondary mb-0">Request your available balance whenever you are ready.</p></div>
+    <form method="post" action="{{ url_for('request_payout') }}"><button class="btn btn-primary" type="submit" {% if payout_summary.available <= 0 %}disabled{% endif %}>Request payout</button></form>
+  </div>
+</div>
+{% if payouts %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="h5 mb-0">Payout history</h3>
+      <a href="{{ url_for('api_payouts') }}" class="small text-decoration-none">View API data</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Requested</th></tr></thead>
+        <tbody>
+          {% for payout in payouts %}
+          <tr>
+            <td class="font-monospace small">{{ payout.payment_reference or 'Pending reference' }}</td>
+            <td>${{ '%.2f'|format(payout.amount) }}</td>
+            <td><span class="badge text-bg-warning">{{ payout.status|capitalize }}</span></td>
+            <td>{{ payout.requested_at.strftime('%Y-%m-%d %H:%M') if payout.requested_at else 'Pending' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+  <div class="col">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">{{ current_user.name }}</h5>
+        <p class="card-text">Cuisine: {{ current_user.cuisine }}</p>
+        <p class="card-text">City: {{ current_user.city }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">My Menu</h5>
+        <ul class="list-group list-group-flush">
+          {% for item in menu %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ item.title }}</span>
+            <span class="badge bg-primary rounded-pill">${{ '%.2f'|format(item.price) }}</span>
+          </li>
+          {% else %}
+          <li class="list-group-item">No menu items yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h3>Recent Orders</h3>
+    {% if orders %}
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Ordered At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td>{{ order.customer_name }}</td>
+            <td>{{ order.menu_item.title }}</td>
+            <td>{{ order.quantity }}</td>
+            <td>${{ '%.2f'|format(order.price * order.quantity) }}</td>
+            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="lead">No orders have been placed yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1>{{ restaurant.name }}</h1>
+    <p class="text-muted">{{ restaurant.cuisine }} in {{ restaurant.city }}</p>
+    <p>Email: {{ restaurant.email }}</p>
+    <a class="btn btn-primary" href="{{ url_for('restaurant_dashboard') }}">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

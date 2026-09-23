@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}My orders | KaiExpress{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <span class="eyebrow text-primary">YOUR KAIEXPRESS</span>
+  <h1 class="mt-2 mb-1">Order history</h1>
+  <p class="text-muted mb-0">Everything you&rsquo;ve ordered, in one place.</p>
+  {% if success %}
+  <div class="alert alert-success">Your order was submitted successfully.</div>
+  {% endif %}
+</div>
+{% if orders %}
+<div class="table-responsive order-table-wrap">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Customer</th>
+        <th>Restaurant</th>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>{{ order.customer_name }}</td>
+        <td>{{ order.restaurant.name }}</td>
+        <td>{{ order.menu_item.title }}</td>
+        <td>{{ order.quantity }}</td>
+        <td>${{ '%.2f'|format(order.price * order.quantity) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="lead">You have no orders yet. Visit the home page to place your first order.</p>
+{% endif %}
+{% endblock %}

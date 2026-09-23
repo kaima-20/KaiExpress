@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}KaiExpress{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/">Home</a> |
+        <a href="/restaurants">Restaurants</a> |
+        <a href="/cart">Cart</a> |
+        <a href="/login">Login</a>
+      </nav>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+    <footer>
+      <p>&copy; KaiExpress</p>
+    </footer>
+    <script src="/static/js/script.js"></script>
+  </body>
+</html>

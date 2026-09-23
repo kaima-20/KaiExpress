@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title">Restaurant Register</h2>
+        <p class="text-muted">Create a restaurant account to receive orders.</p>
+        <form id="restaurant-register-form" method="post">
+          <div class="mb-3">
+            <label class="form-label">Restaurant Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Restaurant name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="restaurant@example.com" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Cuisine</label>
+            <input type="text" name="cuisine" class="form-control" placeholder="Type of food" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-control" placeholder="City" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
