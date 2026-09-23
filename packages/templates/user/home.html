@@ -8,7 +8,7 @@
     <div class="col-lg-7">
       <span class="eyebrow">DELIVERY, YOUR WAY</span>
       <h1 class="display-4 fw-bold mt-3 mb-3">What are you craving today?</h1>
-      <p class="hero-copy mb-0">From Kenyan street food to smoky burgers and Japanese comfort bowls, find your next favourite meal and get it brought to your door.</p>
+      <p class="hero-copy mb-0">From artisan burgers and wood-fired pizza to creamy pasta and gourmet brunch, find your next favourite comfort meal and get it brought to your door.</p>
     </div>
     <div class="col-lg-5">
       <form class="search-box" action="{{ url_for('home') }}" method="get">
@@ -17,7 +17,7 @@
         <input id="restaurant-search" name="q" value="{{ search }}" placeholder="Search restaurants, dishes..." autocomplete="off">
         <button type="submit">Search</button>
       </form>
-      <p class="search-hint mb-0 mt-2">Try “pizza”, “ramen”, or a city</p>
+      <p class="search-hint mb-0 mt-2">Try “burger”, “pasta”, or a city</p>
     </div>
   </div>
 </section>
@@ -48,7 +48,7 @@
     </article>
   </div>
   {% else %}
-  <div class="col-12"><div class="empty-state text-center p-5"><h3>No kitchens yet</h3><p class="text-body-secondary mb-0">Check back soon for new KaiExpress partners.</p></div></div>
+  <div class="col-12"><div class="empty-state text-center p-5"><h3>No kitchens yet</h3><p class="text-body-secondary mb-0">Check back soon for new Western kitchen partners.</p></div></div>
   {% endfor %}
 </div>
 {% endblock %}

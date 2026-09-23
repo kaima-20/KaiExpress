@@ -18,7 +18,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navMenu">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
-            <li class="nav-item"><span class="location-pill"><span class="location-dot"></span> Delivering to <strong>Nairobi</strong></span></li>
+            <li class="nav-item"><span class="location-pill"><span class="location-dot"></span> Delivering to <strong>Chicago</strong></span></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Browse</a></li>
             {% if current_user.is_authenticated %}
               {% if current_user.is_restaurant %}
@@ -56,7 +56,7 @@
       {% block content %}{% endblock %}
     </main>
     <footer class="border-top py-4 mt-auto bg-white">
-      <div class="container d-flex flex-wrap justify-content-between gap-2 text-body-secondary small"><span>&copy; 2026 KaiExpress</span><span>Good food, delivered simply.</span></div>
+      <div class="container d-flex flex-wrap justify-content-between gap-2 text-body-secondary small"><span>&copy; 2026 KaiExpress</span><span>Fresh comfort, delivered fast.</span></div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='main.js') }}" defer></script>

@@ -170,7 +170,7 @@ def init_user_routes(app, db, User, MenuItem, Order):
             elif payment_method == "mobile_money":
                 phone = "".join(request.form.get("mobile_number", "").split())
                 if not phone.isdigit() or not 9 <= len(phone) <= 15:
-                    flash("Enter a valid mobile money number.", "warning")
+                    flash("Enter a valid wallet number.", "warning")
                     return redirect(url_for("payment_checkout", order_id=order.id))
 
             order.payment_method = payment_method

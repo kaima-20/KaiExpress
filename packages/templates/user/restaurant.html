@@ -56,7 +56,7 @@
               </label>
               <label class="payment-option">
                 <input type="radio" name="payment_method" value="mobile_money">
-                <span><strong>M-Pesa</strong><small>Pay with your phone</small></span>
+                <span><strong>Apple Pay</strong><small>Pay with your digital wallet</small></span>
               </label>
               <label class="payment-option">
                 <input type="radio" name="payment_method" value="cash_on_delivery">
@@ -74,8 +74,8 @@
             <small class="text-body-secondary d-block mt-2">Card details are used for this checkout only.</small>
           </div>
           <div id="mobile-money-fields" class="payment-fields mb-3" hidden>
-            <label class="form-label" for="mobile-number">M-Pesa phone number</label>
-            <input id="mobile-number" type="tel" name="mobile_number" class="form-control" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX">
+            <label class="form-label" for="mobile-number">Wallet number</label>
+            <input id="mobile-number" type="tel" name="mobile_number" class="form-control" inputmode="tel" autocomplete="tel" placeholder="(555) 123-4567">
           </div>
           <button type="submit" class="btn btn-dark w-100 py-3"><span id="checkout-button-label">Continue to payment</span> <span aria-hidden="true">&rarr;</span></button>
         </form>
