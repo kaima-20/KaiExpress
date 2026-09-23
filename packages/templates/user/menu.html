@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Menu | KaiExpress{% endblock %}
+
+{% block content %}
+<section class="page-heading page-heading-wide mb-5">
+  <span class="eyebrow text-primary">THE KAIEXPRESS MENU</span>
+  <h1 class="mt-2 mb-2">Find something delicious</h1>
+  <p class="text-body-secondary">Choose a kitchen below to explore its full menu and place an order.</p>
+</section>
+
+<div class="menu-directory">
+  {% for restaurant in restaurants %}
+  <a class="menu-directory-row" href="{{ url_for('restaurant_page', restaurant_id=restaurant.id) }}">
+    <div>
+      <span class="eyebrow text-primary">{{ restaurant.cuisine }}</span>
+      <h2>{{ restaurant.name }}</h2>
+      <p>{{ restaurant.menu_items|length }} menu items &middot; {{ restaurant.city }}</p>
+    </div>
+    <span class="menu-directory-arrow" aria-hidden="true">&rarr;</span>
+  </a>
+  {% else %}
+  <div class="empty-state"><h2>The menu is being prepared</h2><p class="text-body-secondary mb-0">Check back soon for dishes from our partner kitchens.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

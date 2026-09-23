@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 
+{% block title %}Register your restaurant | KaiExpress{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h2 class="card-title">Restaurant Register</h2>
-        <p class="text-muted">Create a restaurant account to receive orders.</p>
-        <form id="restaurant-register-form" method="post">
+<div class="auth-page auth-page-register">
+  <section class="auth-intro auth-intro-owner">
+    <span class="eyebrow">BECOME A PARTNER</span>
+    <h1>Your food deserves a wider table.</h1>
+    <p>Set up your restaurant profile and start sharing your menu with hungry customers nearby.</p>
+    <div class="auth-detail"><span>01</span><strong>Tell customers who you are</strong></div>
+    <div class="auth-detail"><span>02</span><strong>Publish your menu</strong></div>
+    <div class="auth-detail"><span>03</span><strong>Receive new orders</strong></div>
+  </section>
+  <section class="auth-card">
+    <span class="eyebrow text-primary">RESTAURANT ACCOUNT</span>
+    <h2>Register your restaurant</h2>
+    <p class="auth-muted">Create your partner account to get started.</p>
+    <form id="restaurant-register-form" method="post">
           <div class="mb-3">
             <label class="form-label">Restaurant Name</label>
             <input type="text" name="name" class="form-control" placeholder="Restaurant name" required>
@@ -40,10 +49,10 @@
             <label class="form-label">City</label>
             <input type="text" name="city" class="form-control" placeholder="City" required>
           </div>
-          <button type="submit" class="btn btn-primary">Register</button>
-        </form>
-      </div>
-    </div>
-  </div>
+      <button type="submit" class="btn btn-primary w-100">Create restaurant account</button>
+    </form>
+    <p class="auth-switch">Already a partner? <a href="{{ url_for('restaurant_login') }}">Sign in</a></p>
+    <p class="auth-switch">Ordering a meal? <a href="{{ url_for('register') }}">Create a customer account</a></p>
+  </section>
 </div>
 {% endblock %}

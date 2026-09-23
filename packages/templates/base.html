@@ -25,12 +25,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navMenu">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
-            <li class="nav-item"><span class="location-pill"><span class="location-dot"></span> Delivering to <strong>Lagos</strong></span></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="#menu">Menu</a></li>
-            <li class="nav-item"><a class="nav-link" href="#restaurants">Restaurants</a></li>
-            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.endpoint == 'restaurants_page' %}active{% endif %}" href="{{ url_for('restaurants_page') }}">Restaurants</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.endpoint == 'menu_page' %}active{% endif %}" href="{{ url_for('menu_page') }}">Menu</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.endpoint == 'about_page' %}active{% endif %}" href="{{ url_for('about_page') }}">About</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.endpoint == 'contact_page' %}active{% endif %}" href="{{ url_for('contact_page') }}">Contact</a></li>
             {% if current_user.is_authenticated %}
               {% if current_user.is_restaurant %}
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant_dashboard') }}">Dashboard</a></li>
@@ -39,10 +38,10 @@
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('orders') }}">My Orders</a></li>
               {% endif %}
               <li class="nav-item"><span class="nav-link text-white-50">Hi, {{ current_user.name.split(' ')[0] }}</span></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant_logout' if current_user.is_restaurant else 'logout') }}">Logout</a></li>
             {% else %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">Register</a></li>
+              <li class="nav-item ms-lg-2"><a class="btn btn-light btn-sm nav-account-button" href="{{ url_for('login') }}">Sign in</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant_login') }}">For restaurants</a></li>
             {% endif %}
           </ul>
         </div>
@@ -72,8 +71,10 @@
         </div>
         <div class="footer-links">
           <a href="{{ url_for('home') }}">Home</a>
-          <a href="#menu">Menu</a>
-          <a href="#about">About</a>
+          <a href="{{ url_for('restaurants_page') }}">Restaurants</a>
+          <a href="{{ url_for('menu_page') }}">Menu</a>
+          <a href="{{ url_for('about_page') }}">About</a>
+          <a href="{{ url_for('contact_page') }}">Contact</a>
         </div>
         <div class="footer-copy">&copy; 2026 KaiExpress</div>
       </div>

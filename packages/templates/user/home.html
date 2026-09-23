@@ -10,8 +10,8 @@
       <h1 class="mt-3 mb-3">Taste Nigeria. Discover the World.</h1>
       <p class="hero-copy mb-0">Authentic Nigerian dishes from across the states, delivered to your doorstep with warmth, flavour, and convenience.</p>
       <div class="hero-actions">
-        <a href="#menu" class="btn btn-light">Order Now</a>
-        <a href="#restaurants" class="btn btn-outline-light">Explore Restaurants</a>
+        <a href="{{ url_for('menu_page') }}" class="btn btn-light">Order Now</a>
+        <a href="{{ url_for('restaurants_page') }}" class="btn btn-outline-light">Explore Restaurants</a>
       </div>
       <div class="hero-metrics">
         <div class="metric-box"><strong>30+</strong><span>Popular dishes</span></div>
@@ -92,6 +92,7 @@
   </div>
 </div>
 
+{% if current_user.is_authenticated and not current_user.is_restaurant %}
 <div class="section-shell" id="restaurants">
   <div class="section-header">
     <div>
@@ -136,6 +137,19 @@
     {% endfor %}
   </div>
 </div>
+{% else %}
+<section class="access-prompt section-shell">
+  <div>
+    <span class="eyebrow">READY WHEN YOU ARE</span>
+    <h2 class="mt-2 mb-2">Sign in to explore available kitchens</h2>
+    <p>Log in or create a free customer account to browse restaurants, view menus, and place an order.</p>
+  </div>
+  <div class="access-prompt-actions">
+    <a class="btn btn-dark" href="{{ url_for('login') }}">Sign in</a>
+    <a class="btn btn-outline-dark" href="{{ url_for('register') }}">Create account</a>
+  </div>
+</section>
+{% endif %}
 
 <div class="world-banner" id="about">
   <div class="world-banner-inner">

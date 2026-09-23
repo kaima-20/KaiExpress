@@ -29,6 +29,15 @@ def positive_int(value, default=0):
 
 
 def init_user_routes(app, db, User, MenuItem, Order):
+    payment_methods = {
+        "card": "Paystack / Card",
+        "paystack": "Paystack",
+        "bank_transfer": "Bank Transfer",
+        "ussd": "USSD",
+        "qr": "QR Code",
+        "cash_on_delivery": "Cash on Delivery",
+    }
+
     def get_order_total(order):
         return round((float(order.price or 0) * int(order.quantity or 1)), 2)
 
@@ -63,7 +72,105 @@ def init_user_routes(app, db, User, MenuItem, Order):
             "amount": payload.get("amount"),
         }
 
+    def initialize_paystack_payment(order):
+        secret_key = app.config.get("PAYSTACK_SECRET_KEY")
+        if not secret_key:
+            return None, "Paystack is not configured. Add PAYSTACK_SECRET_KEY to your environment variables."
+
+        total_amount = int(round(get_order_total(order) * 100))
+        if total_amount <= 0:
+            return None, "The order total must be greater than zero before paying."
+
+        channels = {
+            "card": ["card"],
+            "bank_transfer": ["bank_transfer"],
+            "ussd": ["ussd"],
+            "qr": ["qr"],
+        }
+        reference = f"KAI-{order.id}-{uuid4().hex[:12].upper()}"
+        payload = {
+            "email": current_user.email,
+            "amount": total_amount,
+            "currency": "NGN",
+            "reference": reference,
+            "callback_url": url_for("paystack_callback", order_id=order.id, _external=True),
+            "metadata": {
+                "order_id": order.id,
+                "customer_name": order.customer_name or current_user.name,
+                "total_amount": get_order_total(order),
+                "payment_method": order.payment_method,
+            },
+        }
+        if order.payment_method != "paystack":
+            payload["channels"] = channels[order.payment_method]
+
+        try:
+            response = requests.post(
+                "https://api.paystack.co/transaction/initialize",
+                json=payload,
+                headers=paystack_headers(),
+                timeout=30,
+            )
+            response_data = response.json()
+        except requests.RequestException as exc:
+            app.logger.error("Paystack init failed: %s", exc)
+            return None, f"Paystack initialization failed: {exc}"
+
+        if response.status_code != 200 or not response_data.get("status"):
+            message = response_data.get("message") or "Unable to start Paystack payment right now."
+            app.logger.error("Paystack init error: %s", message)
+            return None, message
+
+        authorization_url = (response_data.get("data") or {}).get("authorization_url")
+        if not authorization_url:
+            app.logger.error("Paystack response missing authorization_url: %s", response_data)
+            return None, "Paystack did not return a valid payment link."
+
+        order.payment_reference = reference
+        order.payment_status = "pending"
+        db.session.commit()
+        return authorization_url, None
+
+    def build_order(data, restaurant_id):
+        payment_method = data.get("payment_method", "").strip()
+        if payment_method not in payment_methods:
+            return None, "Please select a valid payment method."
+
+        item_id = positive_int(data.get("item_id"))
+        quantity = max(1, positive_int(data.get("quantity"), 1))
+        restaurant = User.query.filter_by(id=restaurant_id, is_restaurant=True).first()
+        if not restaurant:
+            return None, "Restaurant not found."
+        item = MenuItem.query.filter_by(id=item_id, restaurant_id=restaurant_id).first()
+        if not item:
+            return None, "Menu item not found."
+
+        if current_user.is_authenticated and not current_user.is_restaurant:
+            customer_name = current_user.name
+            customer_id = current_user.id
+        else:
+            customer_name = data.get("customer_name", "Guest").strip() or "Guest"
+            customer_id = None
+
+        return Order(
+            restaurant_id=restaurant_id,
+            menu_item_id=item.id,
+            customer_id=customer_id,
+            customer_name=customer_name,
+            quantity=quantity,
+            price=item.price,
+            payment_method=payment_method,
+            payment_status="pending",
+        ), None
+
+    def normalize_payment_method(order):
+        if order.payment_method in {None, "paystack"}:
+            order.payment_method = "card"
+            db.session.commit()
+        return order.payment_method
+
     @app.route("/api/restaurants")
+    @login_required
     def api_restaurants():
         restaurants = User.query.filter_by(is_restaurant=True).order_by(User.name.asc()).all()
         return {
@@ -78,6 +185,7 @@ def init_user_routes(app, db, User, MenuItem, Order):
         }
 
     @app.route("/api/restaurants/<int:restaurant_id>/menu")
+    @login_required
     def api_restaurant_menu(restaurant_id):
         restaurant = User.query.filter_by(id=restaurant_id, is_restaurant=True).first()
         if not restaurant:
@@ -94,26 +202,31 @@ def init_user_routes(app, db, User, MenuItem, Order):
         }
 
     @app.route("/")
+    @login_required
     def home():
         search = request.args.get("q", "").strip()
         cuisine = request.args.get("cuisine", "").strip()
-        query = User.query.filter_by(is_restaurant=True)
-        if search:
-            query = query.filter(
-                db.or_(
-                    User.name.ilike(f"%{search}%"),
-                    User.cuisine.ilike(f"%{search}%"),
-                    User.city.ilike(f"%{search}%"),
-                    User.menu_items.any(MenuItem.title.ilike(f"%{search}%")),
-                    User.menu_items.any(MenuItem.description.ilike(f"%{search}%")),
+        if current_user.is_authenticated and not current_user.is_restaurant:
+            query = User.query.filter_by(is_restaurant=True)
+            if search:
+                query = query.filter(
+                    db.or_(
+                        User.name.ilike(f"%{search}%"),
+                        User.cuisine.ilike(f"%{search}%"),
+                        User.city.ilike(f"%{search}%"),
+                        User.menu_items.any(MenuItem.title.ilike(f"%{search}%")),
+                        User.menu_items.any(MenuItem.description.ilike(f"%{search}%")),
+                    )
                 )
-            )
-        if cuisine:
-            query = query.filter_by(cuisine=cuisine)
-        restaurants = query.order_by(User.name.asc()).all()
-        cuisines = [row[0] for row in db.session.query(User.cuisine).filter(
-            User.is_restaurant.is_(True), User.cuisine.isnot(None)
-        ).distinct().order_by(User.cuisine.asc()).all()]
+            if cuisine:
+                query = query.filter_by(cuisine=cuisine)
+            restaurants = query.order_by(User.name.asc()).all()
+            cuisines = [row[0] for row in db.session.query(User.cuisine).filter(
+                User.is_restaurant.is_(True), User.cuisine.isnot(None)
+            ).distinct().order_by(User.cuisine.asc()).all()]
+        else:
+            restaurants = []
+            cuisines = []
         return render_template(
             "user/home.html",
             restaurants=restaurants,
@@ -122,7 +235,28 @@ def init_user_routes(app, db, User, MenuItem, Order):
             active_cuisine=cuisine,
         )
 
+    @app.route("/restaurants")
+    @login_required
+    def restaurants_page():
+        restaurants = User.query.filter_by(is_restaurant=True).order_by(User.name.asc()).all()
+        return render_template("user/restaurants.html", restaurants=restaurants)
+
+    @app.route("/menu")
+    @login_required
+    def menu_page():
+        restaurants = User.query.filter_by(is_restaurant=True).order_by(User.name.asc()).all()
+        return render_template("user/menu.html", restaurants=restaurants)
+
+    @app.route("/about")
+    def about_page():
+        return render_template("user/about.html")
+
+    @app.route("/contact")
+    def contact_page():
+        return render_template("user/contact.html")
+
     @app.route("/restaurant/<int:restaurant_id>")
+    @login_required
     def restaurant_page(restaurant_id):
         restaurant = User.query.filter_by(id=restaurant_id, is_restaurant=True).first()
         if not restaurant:
@@ -132,38 +266,17 @@ def init_user_routes(app, db, User, MenuItem, Order):
 
     @app.route("/restaurant/<int:restaurant_id>/order", methods=["POST"])
     def place_order(restaurant_id):
-        restaurant = User.query.filter_by(id=restaurant_id, is_restaurant=True).first()
-        if not restaurant:
-            return redirect(url_for("home"))
-
-        item_id = positive_int(request.form.get("item_id"))
-        quantity = max(1, positive_int(request.form.get("quantity"), 1))
-        item = MenuItem.query.filter_by(id=item_id, restaurant_id=restaurant_id).first()
-        if not item:
-            flash("Please select a valid menu item.", "danger")
+        order, error = build_order(request.form, restaurant_id)
+        if error:
+            flash(error, "danger")
             return redirect(url_for("restaurant_page", restaurant_id=restaurant_id))
-
-        if current_user.is_authenticated and not current_user.is_restaurant:
-            customer_name = current_user.name
-            customer_id = current_user.id
-        else:
-            customer_name = request.form.get("customer_name", "Guest").strip() or "Guest"
-            customer_id = None
-
-        order = Order(
-            restaurant_id=restaurant_id,
-            menu_item_id=item.id,
-            customer_id=customer_id,
-            customer_name=customer_name,
-            quantity=quantity,
-            price=item.price,
-        )
         db.session.add(order)
         db.session.commit()
-        flash("Your order was submitted successfully.", "success")
 
         if current_user.is_authenticated and not current_user.is_restaurant:
+            flash("Your order was created. Continue with your selected payment method.", "success")
             return redirect(url_for("payment_checkout", order_id=order.id))
+        flash("Your order was submitted successfully.", "success")
         return redirect(url_for("restaurant_page", restaurant_id=restaurant_id))
 
     @app.route("/orders")
@@ -181,11 +294,12 @@ def init_user_routes(app, db, User, MenuItem, Order):
             return redirect(url_for("restaurant_dashboard"))
 
         order = Order.query.filter_by(id=order_id, customer_id=current_user.id).first_or_404()
+        normalize_payment_method(order)
         if order.payment_status == "paid":
             flash("This order has already been paid.", "info")
             return redirect(url_for("orders"))
 
-        return render_template("user/payment.html", order=order)
+        return render_template("user/payment.html", order=order, payment_methods=payment_methods)
 
     @app.route("/orders/<int:order_id>/paystack/initialize", methods=["POST"])
     @login_required
@@ -194,63 +308,33 @@ def init_user_routes(app, db, User, MenuItem, Order):
             return redirect(url_for("restaurant_dashboard"))
 
         order = Order.query.filter_by(id=order_id, customer_id=current_user.id).first_or_404()
+        normalize_payment_method(order)
         if order.payment_status == "paid":
             flash("This order has already been paid.", "info")
             return redirect(url_for("orders"))
 
-        secret_key = app.config.get("PAYSTACK_SECRET_KEY")
-        if not secret_key:
-            flash("Paystack is not configured. Add PAYSTACK_SECRET_KEY to your environment variables.", "warning")
+        selected_method = request.form.get("payment_method", order.payment_method).strip()
+        if selected_method not in payment_methods:
+            flash("Please select a valid payment method.", "warning")
             return redirect(url_for("payment_checkout", order_id=order.id))
 
-        total_amount = int(round(get_order_total(order) * 100))
-        if total_amount <= 0:
-            flash("The order total must be greater than zero before paying.", "warning")
-            return redirect(url_for("payment_checkout", order_id=order.id))
+        order.payment_method = selected_method
+        if selected_method == "cash_on_delivery":
+            order.payment_status = "pending"
+            order.payment_reference = None
+            db.session.commit()
+            flash("Cash on delivery selected. Payment is due when your order arrives.", "success")
+            return redirect(url_for("orders"))
 
-        reference = f"KAI-{order.id}-{uuid4().hex[:12].upper()}"
-        callback_url = url_for("paystack_callback", order_id=order.id, _external=True)
-        payload = {
-            "email": current_user.email,
-            "amount": total_amount,
-            "currency": "NGN",
-            "reference": reference,
-            "callback_url": callback_url,
-            "metadata": {
-                "order_id": order.id,
-                "customer_name": order.customer_name or current_user.name,
-                "total_amount": get_order_total(order),
-            },
-        }
+        if order.payment_method not in {"card", "paystack", "bank_transfer", "ussd", "qr"}:
+            flash("This order does not require an online payment.", "info")
+            return redirect(url_for("orders"))
 
-        try:
-            response = requests.post(
-                "https://api.paystack.co/transaction/initialize",
-                json=payload,
-                headers=paystack_headers(),
-                timeout=30,
-            )
-            response_data = response.json()
-        except requests.RequestException as exc:
-            app.logger.error("Paystack init failed: %s", exc)
-            flash(f"Paystack initialization failed: {exc}", "warning")
-            return redirect(url_for("payment_checkout", order_id=order.id))
-
-        if response.status_code != 200 or not response_data.get("status"):
-            message = response_data.get("message") or "Unable to start Paystack payment right now."
-            app.logger.error("Paystack init error: %s", message)
-            flash(message, "warning")
-            return redirect(url_for("payment_checkout", order_id=order.id))
-
-        authorization_url = (response_data.get("data") or {}).get("authorization_url")
-        if not authorization_url:
-            app.logger.error("Paystack response missing authorization_url: %s", response_data)
-            flash("Paystack did not return a valid payment link.", "warning")
-            return redirect(url_for("payment_checkout", order_id=order.id))
-
-        order.payment_method = "paystack"
-        order.payment_reference = reference
         db.session.commit()
+        authorization_url, error = initialize_paystack_payment(order)
+        if error:
+            flash(error, "warning")
+            return redirect(url_for("payment_checkout", order_id=order.id))
         return redirect(authorization_url)
 
     @app.route("/orders/<int:order_id>/paystack/callback", methods=["GET", "POST"])
@@ -267,16 +351,19 @@ def init_user_routes(app, db, User, MenuItem, Order):
             return redirect(url_for("payment_checkout", order_id=order.id))
 
         verification = verify_paystack_payment(reference)
-        if verification.get("status"):
+        expected_amount = int(round(get_order_total(order) * 100))
+        reference_matches = not order.payment_reference or order.payment_reference == reference
+        amount_matches = verification.get("amount") == expected_amount
+        transaction_matches = verification.get("reference") == reference
+        if verification.get("status") and reference_matches and amount_matches and transaction_matches:
             order.payment_status = "paid"
-            order.payment_method = "paystack"
             order.payment_reference = reference
             order.paid_at = datetime.utcnow()
             db.session.commit()
             flash("Payment received. Your order is being prepared.", "success")
             return redirect(url_for("orders"))
 
-        flash("Payment was not successful. Please try again or choose another payment method.", "warning")
+        flash("Payment could not be verified for the expected order amount. Please try again or choose another payment method.", "warning")
         return redirect(url_for("payment_checkout", order_id=order.id))
 
     @app.route("/api/orders")
@@ -384,34 +471,16 @@ def init_user_routes(app, db, User, MenuItem, Order):
     def api_checkout():
         data = request_data()
         restaurant_id = positive_int(data.get("restaurant_id"))
-        item_id = positive_int(data.get("item_id"))
-        quantity = max(1, positive_int(data.get("quantity"), 1))
-        restaurant = User.query.filter_by(id=restaurant_id, is_restaurant=True).first()
-        if not restaurant:
-            return json_response(False, "Restaurant not found.", status=404)
-        item = MenuItem.query.filter_by(id=item_id, restaurant_id=restaurant_id).first()
-        if not item:
-            return json_response(False, "Menu item not found.", status=404)
-
-        if current_user.is_authenticated and not current_user.is_restaurant:
-            customer_name = current_user.name
-            customer_id = current_user.id
-        else:
-            customer_name = data.get("customer_name", "Guest").strip() or "Guest"
-            customer_id = None
-
-        order = Order(
-            restaurant_id=restaurant_id,
-            menu_item_id=item.id,
-            customer_id=customer_id,
-            customer_name=customer_name,
-            quantity=quantity,
-            price=item.price,
-        )
+        order, error = build_order(data, restaurant_id)
+        if error:
+            return json_response(False, error, status=400)
         db.session.add(order)
         db.session.commit()
-        next_url = url_for("payment_checkout", order_id=order.id) if customer_id else url_for("restaurant_page", restaurant_id=restaurant_id)
-        return json_response(True, "Order created. Complete payment to confirm it.", next=next_url)
+        if order.customer_id:
+            if order.payment_method == "cash_on_delivery":
+                return json_response(True, "Order placed. Payment is due when your order is delivered.", next=url_for("orders"))
+            return json_response(True, "Order created. Continue with your selected payment method.", next=url_for("payment_checkout", order_id=order.id))
+        return json_response(True, "Order submitted successfully.", next=url_for("restaurant_page", restaurant_id=restaurant_id))
 
     @app.route("/api/logout", methods=["POST"])
     def api_logout():

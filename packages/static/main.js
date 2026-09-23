@@ -32,10 +32,6 @@ function bindForm(selector, handler) {
   form.addEventListener('submit', async event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
-    delete data.card_number;
-    delete data.card_expiry;
-    delete data.card_cvc;
-    delete data.mobile_number;
     try {
       const result = await handler(data);
       showAlert(result.message, 'success');
@@ -53,8 +49,6 @@ function bindCheckout() {
   const item = form.querySelector('[name="item_id"]');
   const quantity = form.querySelector('[name="quantity"]');
   const total = form.querySelector('#checkout-total');
-  const cardFields = form.querySelector('#card-payment-fields');
-  const mobileFields = form.querySelector('#mobile-money-fields');
   const buttonLabel = form.querySelector('#checkout-button-label');
 
   const updateTotal = () => {
@@ -65,10 +59,6 @@ function bindCheckout() {
 
   const updatePaymentFields = () => {
     const method = form.querySelector('[name="payment_method"]:checked')?.value;
-    cardFields.hidden = method !== 'card';
-    mobileFields.hidden = method !== 'mobile_money';
-    cardFields.querySelectorAll('input').forEach(input => { input.required = method === 'card'; });
-    mobileFields.querySelector('input').required = method === 'mobile_money';
     buttonLabel.textContent = method === 'cash_on_delivery' ? 'Place order' : 'Continue to payment';
   };
 

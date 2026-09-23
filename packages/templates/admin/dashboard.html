@@ -101,6 +101,7 @@
             <th>Item</th>
             <th>Qty</th>
             <th>Total</th>
+            <th>Payment</th>
             <th>Ordered At</th>
           </tr>
         </thead>
@@ -111,6 +112,7 @@
             <td>{{ order.menu_item.title }}</td>
             <td>{{ order.quantity }}</td>
             <td>${{ '%.2f'|format(order.price * order.quantity) }}</td>
+            <td>{{ order.payment_method or 'Card' }}<br><small class="text-muted">{{ order.payment_status|capitalize }}</small></td>
             <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
           </tr>
           {% endfor %}

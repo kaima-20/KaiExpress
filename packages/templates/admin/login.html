@@ -1,13 +1,20 @@
 {% extends "base.html" %}
 
+{% block title %}Restaurant sign in | KaiExpress{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h2 class="card-title">Restaurant Login</h2>
-        <p class="text-muted">Restaurant owners can sign in to review orders.</p>
-        <form id="restaurant-login-form" method="post">
+<div class="auth-page">
+  <section class="auth-intro auth-intro-owner">
+    <span class="eyebrow">KAIEXPRESS PARTNERS</span>
+    <h1>Bring your kitchen to more tables.</h1>
+    <p>Manage your menu, receive orders, and grow your restaurant with a focused partner workspace.</p>
+    <div class="auth-quote">A calm dashboard for the work behind every memorable meal.</div>
+  </section>
+  <section class="auth-card">
+    <span class="eyebrow text-primary">RESTAURANT ACCOUNT</span>
+    <h2>Welcome back, kitchen</h2>
+    <p class="auth-muted">Sign in to manage your restaurant.</p>
+    <form id="restaurant-login-form" method="post">
           <div class="mb-3">
             <label class="form-label">Restaurant Email</label>
             <input type="email" name="email" class="form-control" placeholder="restaurant@example.com" required>
@@ -16,10 +23,10 @@
             <label class="form-label">Password</label>
             <input type="password" name="password" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-      </div>
-    </div>
-  </div>
+      <button type="submit" class="btn btn-primary w-100">Sign in</button>
+    </form>
+    <p class="auth-switch">New restaurant partner? <a href="{{ url_for('restaurant_register') }}">Create an account</a></p>
+    <p class="auth-switch">Ordering for yourself? <a href="{{ url_for('login') }}">Customer sign in</a></p>
+  </section>
 </div>
 {% endblock %}

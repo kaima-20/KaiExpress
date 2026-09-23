@@ -83,12 +83,30 @@ p {
   border-radius: 0.6rem;
   color: rgba(255,255,255,0.86);
   font-weight: 500;
+  padding: 0.55rem 0.75rem;
 }
 
 .navbar .nav-link:hover,
 .navbar .nav-link:focus {
   background: rgba(255,255,255,0.08);
   color: white;
+}
+
+.navbar .nav-link.active {
+  color: white;
+  background: rgba(255,255,255,0.14);
+}
+
+.nav-account-button {
+  color: var(--kai-emerald);
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+}
+
+.nav-account-button:hover,
+.nav-account-button:focus {
+  color: var(--kai-emerald);
+  background: var(--kai-gold);
 }
 
 .navbar-brand {
@@ -579,11 +597,351 @@ p {
   border: 1px solid rgba(7,94,84,0.12);
 }
 
+.page-heading-wide {
+  max-width: 48rem;
+}
+
+.page-heading h1,
+.editorial-heading h1 {
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  letter-spacing: -0.06em;
+  line-height: 1.05;
+}
+
+.page-heading p,
+.editorial-heading p {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  max-width: 42rem;
+}
+
+.menu-directory {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 58rem;
+}
+
+.menu-directory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.4rem 1.5rem;
+  color: inherit;
+  text-decoration: none;
+  background: white;
+  border: 1px solid var(--kai-line);
+  border-left: 4px solid var(--kai-gold);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.menu-directory-row:hover {
+  color: inherit;
+  transform: translateX(4px);
+  box-shadow: 0 0.8rem 1.8rem var(--kai-shadow);
+}
+
+.menu-directory-row h2 {
+  margin: 0.25rem 0;
+  font-size: 1.35rem;
+}
+
+.menu-directory-row p {
+  color: rgba(32, 33, 36, 0.68);
+  margin: 0;
+}
+
+.menu-directory-arrow {
+  color: var(--kai-emerald);
+  font-size: 1.5rem;
+}
+
+.editorial-heading {
+  max-width: 55rem;
+}
+
+.about-grid,
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  max-width: 64rem;
+}
+
+.about-feature,
+.about-copy,
+.contact-card {
+  padding: 2rem;
+  background: white;
+  border: 1px solid var(--kai-line);
+}
+
+.about-feature {
+  background: var(--kai-emerald);
+}
+
+.about-feature h2 {
+  color: white;
+  font-size: 2rem;
+  margin: 0.7rem 0 1rem;
+}
+
+.about-feature p,
+.about-copy p {
+  color: rgba(255,255,255,0.78);
+  line-height: 1.8;
+}
+
+.about-copy h2 {
+  font-size: 1.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.about-copy h2:not(:first-child) {
+  margin-top: 1.5rem;
+}
+
+.about-copy p {
+  color: rgba(32,33,36,0.7);
+}
+
+.contact-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.contact-card {
+  display: grid;
+  gap: 0.45rem;
+  color: inherit;
+  text-decoration: none;
+  border-top: 4px solid var(--kai-emerald);
+}
+
+.contact-card:hover {
+  color: inherit;
+  box-shadow: 0 0.8rem 1.8rem var(--kai-shadow);
+}
+
+.contact-card-label {
+  color: var(--kai-emerald);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.contact-card strong {
+  font-size: 1.1rem;
+}
+
+.contact-card span:last-child {
+  color: rgba(32,33,36,0.68);
+}
+
+.access-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2rem;
+  background: white;
+  border: 1px solid var(--kai-line);
+  border-left: 4px solid var(--kai-gold);
+}
+
+.payment-method-list {
+  display: grid;
+  gap: 0.65rem;
+  border: 0;
+  padding: 0;
+}
+
+.payment-method-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--kai-line);
+  border-radius: 0.8rem;
+  background: rgba(255,255,255,0.7);
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.payment-method-choice:hover {
+  border-color: rgba(7,94,84,0.35);
+  transform: translateX(2px);
+}
+
+.payment-method-choice:has(input:checked) {
+  border-color: var(--kai-emerald);
+  background: rgba(7,94,84,0.06);
+}
+
+.payment-method-choice input {
+  flex: 0 0 auto;
+  accent-color: var(--kai-emerald);
+}
+
+.payment-method-choice span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.payment-method-choice small {
+  color: rgba(32,33,36,0.64);
+}
+
+.access-prompt h2 {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.access-prompt p {
+  max-width: 38rem;
+  color: rgba(32,33,36,0.68);
+  line-height: 1.7;
+}
+
+.access-prompt-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.7rem;
+}
+
+.auth-page {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(22rem, 1.1fr);
+  max-width: 60rem;
+  min-height: 34rem;
+  margin: 0 auto;
+  overflow: hidden;
+  background: white;
+  border: 1px solid var(--kai-line);
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.1);
+}
+
+.auth-intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem;
+  background: var(--kai-emerald);
+  color: white;
+}
+
+.auth-intro h1 {
+  max-width: 25rem;
+  margin: 0.8rem 0 1rem;
+  color: white;
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  letter-spacing: -0.06em;
+  line-height: 1.04;
+}
+
+.auth-intro p {
+  max-width: 28rem;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.75;
+}
+
+.auth-intro .eyebrow {
+  color: var(--kai-gold);
+}
+
+.auth-intro-warm {
+  background: linear-gradient(145deg, #c85c3b, #8c3b2b);
+}
+
+.auth-intro-owner {
+  background: linear-gradient(145deg, #075e54, #123f3a);
+}
+
+.auth-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.1rem;
+  color: rgba(255,255,255,0.9);
+  font-size: 0.85rem;
+}
+
+.auth-detail span {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  color: var(--kai-gold);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.auth-quote {
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.82);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.auth-card {
+  align-self: center;
+  max-width: 30rem;
+  width: 100%;
+  padding: 3rem;
+}
+
+.auth-card h2 {
+  margin: 0.65rem 0 0.45rem;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  letter-spacing: -0.05em;
+}
+
+.auth-muted {
+  margin-bottom: 1.8rem;
+  color: rgba(32,33,36,0.65);
+  font-size: 0.9rem;
+}
+
+.auth-card .form-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.auth-card .btn {
+  margin-top: 0.5rem;
+}
+
+.auth-switch {
+  margin-top: 1rem;
+  color: rgba(32,33,36,0.62);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.auth-switch + .auth-switch {
+  margin-top: 0.35rem;
+}
+
+.auth-switch a {
+  color: var(--kai-emerald);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 991.98px) {
   .restaurant-card { grid-column: span 6; }
   .state-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .world-banner-inner { grid-template-columns: 1fr; }
+  .auth-page { grid-template-columns: 1fr; max-width: 38rem; }
+  .auth-intro { min-height: 20rem; padding: 2.5rem; }
 }
 
 @media (max-width: 767.98px) {
@@ -600,4 +958,12 @@ p {
   .location-pill { margin: 0.4rem 0; }
   .hero-actions { flex-direction: column; }
   .hero-actions .btn { width: 100%; }
+  .about-grid,
+  .contact-grid { grid-template-columns: 1fr; }
+  .menu-directory-row { padding: 1.1rem; }
+  .auth-intro,
+  .auth-card { padding: 2rem 1.35rem; }
+  .auth-intro { min-height: 18rem; }
+  .access-prompt { align-items: stretch; flex-direction: column; padding: 1.35rem; }
+  .access-prompt-actions { flex-direction: column; }
 }

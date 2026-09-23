@@ -8,7 +8,7 @@
     <a class="back-link-dark" href="{{ url_for('orders') }}">&larr; Back to orders</a>
     <span class="eyebrow text-primary d-block mt-4">SECURE CHECKOUT</span>
     <h1 class="mt-2 mb-2">Complete your payment</h1>
-    <p class="text-body-secondary mb-0">Review your order and continue to Paystack to complete the payment securely.</p>
+    <p class="text-body-secondary mb-0">Your selected payment method is ready. Complete it securely to confirm your order.</p>
   </div>
 
   <div class="row g-4 align-items-start">
@@ -16,17 +16,46 @@
       <section class="payment-card p-4 p-md-5">
         <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
           <div>
-            <span class="eyebrow text-primary">PAYSTACK</span>
-            <h2 class="h3 mt-2 mb-0">Pay securely on Paystack</h2>
+            <span class="eyebrow text-primary">PAYMENT METHOD</span>
+            <h2 class="h3 mt-2 mb-0">Choose how to pay</h2>
           </div>
           <span class="payment-lock" aria-label="Protected checkout">&#128274;</span>
         </div>
 
-        <p class="text-body-secondary mb-4">You will be redirected to Paystack's hosted payment page. No card details are entered on this website.</p>
+        <p class="text-body-secondary mb-4">Select a method below. Card details are entered securely on Paystack, while bank transfer opens Paystack's transfer instructions for your bank app or online banking.</p>
 
-        <form method="post" action="{{ url_for('paystack_initialize', order_id=order.id) }}">
+        <form id="payment-method-form" method="post" action="{{ url_for('paystack_initialize', order_id=order.id) }}">
+          <fieldset class="payment-method-list mb-4">
+            <legend class="visually-hidden">Payment method</legend>
+            <label class="payment-method-choice">
+              <input type="radio" name="payment_method" value="card" {% if order.payment_method == 'card' %}checked{% endif %} required>
+              <span><strong>Card</strong><small>Enter card details securely on Paystack's hosted form</small></span>
+            </label>
+            <label class="payment-method-choice">
+              <input type="radio" name="payment_method" value="paystack" {% if order.payment_method == 'paystack' %}checked{% endif %}>
+              <span><strong>Paystack</strong><small>Continue to Paystack's hosted payment page</small></span>
+            </label>
+            <label class="payment-method-choice">
+              <input type="radio" name="payment_method" value="qr" {% if order.payment_method == 'qr' %}checked{% endif %}>
+              <span><strong>QR Code</strong><small>Use Paystack's supported QR payment flow</small></span>
+            </label>
+            <label class="payment-method-choice">
+              <input type="radio" name="payment_method" value="cash_on_delivery" {% if order.payment_method == 'cash_on_delivery' %}checked{% endif %}>
+              <span><strong>Cash on Delivery</strong><small>Pay when your order is delivered</small></span>
+            </label>
+            <label class="payment-method-choice">
+              <input type="radio" name="payment_method" value="bank_transfer" {% if order.payment_method == 'bank_transfer' %}checked{% endif %}>
+              <span><strong>Bank Transfer</strong><small>Open transfer instructions and pay from your bank</small></span>
+            </label>
+            <label class="payment-method-choice">
+              <input type="radio" name="payment_method" value="ussd" {% if order.payment_method == 'ussd' %}checked{% endif %}>
+              <span><strong>USSD</strong><small>Use your bank's Paystack USSD flow</small></span>
+            </label>
+          </fieldset>
           <button type="submit" class="btn btn-dark w-100 py-3">
-            <span>Pay Now</span> <span aria-hidden="true">&rarr;</span>
+            <span>
+              {% if order.payment_method == 'cash_on_delivery' %}Place order{% else %}Continue to payment{% endif %}
+            </span> <span aria-hidden="true">&rarr;</span>
           </button>
         </form>
       </section>

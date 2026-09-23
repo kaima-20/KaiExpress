@@ -52,31 +52,22 @@
             <div class="payment-options">
               <label class="payment-option">
                 <input type="radio" name="payment_method" value="card" required>
-                <span><strong>Card</strong><small>Visa or Mastercard</small></span>
+                <span><strong>Paystack / Card Payment</strong><small>Secure payment through Paystack</small></span>
               </label>
               <label class="payment-option">
-                <input type="radio" name="payment_method" value="mobile_money">
-                <span><strong>Apple Pay</strong><small>Pay with your digital wallet</small></span>
+                <input type="radio" name="payment_method" value="bank_transfer">
+                <span><strong>Bank Transfer</strong><small>Pay directly through bank transfer</small></span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="ussd">
+                <span><strong>USSD</strong><small>Pay using your bank's USSD</small></span>
               </label>
               <label class="payment-option">
                 <input type="radio" name="payment_method" value="cash_on_delivery">
-                <span><strong>Cash</strong><small>Pay on delivery</small></span>
+                <span><strong>Cash on Delivery</strong><small>Pay when your order is delivered</small></span>
               </label>
             </div>
           </fieldset>
-          <div id="card-payment-fields" class="payment-fields mb-3" hidden>
-            <label class="form-label" for="card-number">Card number</label>
-            <input id="card-number" type="text" name="card_number" class="form-control mb-2" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" minlength="12" maxlength="19">
-            <div class="row g-2">
-              <div class="col-6"><input type="text" name="card_expiry" class="form-control" autocomplete="cc-exp" placeholder="MM / YY" maxlength="7" aria-label="Card expiry"></div>
-              <div class="col-6"><input type="password" name="card_cvc" class="form-control" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" maxlength="4" aria-label="Card security code"></div>
-            </div>
-            <small class="text-body-secondary d-block mt-2">Card details are used for this checkout only.</small>
-          </div>
-          <div id="mobile-money-fields" class="payment-fields mb-3" hidden>
-            <label class="form-label" for="mobile-number">Wallet number</label>
-            <input id="mobile-number" type="tel" name="mobile_number" class="form-control" inputmode="tel" autocomplete="tel" placeholder="(555) 123-4567">
-          </div>
           <button type="submit" class="btn btn-dark w-100 py-3"><span id="checkout-button-label">Continue to payment</span> <span aria-hidden="true">&rarr;</span></button>
         </form>
       </div>

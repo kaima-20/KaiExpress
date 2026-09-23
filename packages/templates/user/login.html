@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 
+{% block title %}Sign in | KaiExpress{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h2 class="card-title">User Login</h2>
-        <p class="text-muted">Sign in to manage your orders.</p>
-        <form id="user-login-form" method="post">
+<div class="auth-page">
+  <section class="auth-intro">
+    <span class="eyebrow">WELCOME BACK</span>
+    <h1>Good food is only a few clicks away.</h1>
+    <p>Sign in to discover kitchens, follow your orders, and keep your favourite meals close.</p>
+    <div class="auth-detail"><span>01</span><strong>Browse local kitchens</strong></div>
+    <div class="auth-detail"><span>02</span><strong>Choose your perfect meal</strong></div>
+    <div class="auth-detail"><span>03</span><strong>Track it to your door</strong></div>
+  </section>
+  <section class="auth-card">
+    <span class="eyebrow text-primary">CUSTOMER ACCOUNT</span>
+    <h2>Sign in to KaiExpress</h2>
+    <p class="auth-muted">Manage your orders and discover something delicious.</p>
+    <form id="user-login-form" method="post">
           <div class="mb-3">
             <label class="form-label">Email</label>
             <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
@@ -16,10 +25,10 @@
             <label class="form-label">Password</label>
             <input type="password" name="password" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-      </div>
-    </div>
-  </div>
+      <button type="submit" class="btn btn-primary w-100">Sign in</button>
+    </form>
+    <p class="auth-switch">New to KaiExpress? <a href="{{ url_for('register') }}">Create a customer account</a></p>
+    <p class="auth-switch">Restaurant owner? <a href="{{ url_for('restaurant_login') }}">Sign in to your restaurant</a></p>
+  </section>
 </div>
 {% endblock %}

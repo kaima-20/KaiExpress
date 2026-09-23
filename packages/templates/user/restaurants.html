@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurants | KaiExpress{% endblock %}
+
+{% block content %}
+<section class="page-heading page-heading-wide mb-5">
+  <span class="eyebrow text-primary">DISCOVER YOUR NEXT MEAL</span>
+  <h1 class="mt-2 mb-2">Restaurants worth coming back to</h1>
+  <p class="text-body-secondary">Browse trusted kitchens and choose a menu for today.</p>
+</section>
+
+<div class="restaurant-grid">
+  {% for restaurant in restaurants %}
+  <article class="restaurant-card">
+    <div class="restaurant-image" style="background-image: url('{{ ['https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80', 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80', 'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=1000&q=80'][loop.index0 % 3] }}');"></div>
+    <div class="restaurant-card-content">
+      <div class="card-topline">
+        <div>
+          <h2 class="restaurant-name">{{ restaurant.name }}</h2>
+          <p class="restaurant-cuisine">{{ restaurant.cuisine }}</p>
+        </div>
+        <span class="rating">4.8</span>
+      </div>
+      <div class="card-meta"><span class="status-dot"></span><span>{{ restaurant.city }}</span><span>&middot;</span><span>{{ restaurant.menu_items|length }} items</span></div>
+      <div class="card-action"><span class="price-tag">Open today</span><a href="{{ url_for('restaurant_page', restaurant_id=restaurant.id) }}" class="btn btn-dark">View menu</a></div>
+    </div>
+  </article>
+  {% else %}
+  <div class="empty-state"><h2>No restaurants yet</h2><p class="text-body-secondary mb-0">New kitchens will appear here soon.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

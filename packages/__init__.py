@@ -9,6 +9,9 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 
+load_dotenv()
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+
 db = SQLAlchemy()
 login_manager = LoginManager()
 
@@ -28,7 +31,6 @@ def json_response(success, message=None, status=200, **kwargs):
 
 
 def create_app():
-    load_dotenv()
     app = Flask(
         __name__,
         template_folder="templates",
@@ -36,7 +38,7 @@ def create_app():
     )
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-this-secret")
-    app.config["PAYSTACK_SECRET_KEY"] = os.getenv("PAYSTACK_SECRET_KEY", "")
+    app.config["PAYSTACK_SECRET_KEY"] = PAYSTACK_SECRET_KEY or ""
     app.config["PAYSTACK_PUBLIC_KEY"] = os.getenv("PAYSTACK_PUBLIC_KEY", "")
     app.config["PAYSTACK_TEST_MODE"] = True
 
@@ -105,7 +107,7 @@ def upgrade_schema(db):
                 ))
             if "payment_reference" not in order_columns:
                 connection.execute(text(
-                    "ALTER TABLE orders ADD COLUMN payment_reference VARCHAR(40)"
+                    "ALTER TABLE orders ADD COLUMN payment_reference VARCHAR(120)"
                 ))
             if "paid_at" not in order_columns:
                 connection.execute(text(
