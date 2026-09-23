@@ -16,14 +16,17 @@ def payout_summary(restaurant_id, Order, Payout):
     orders = Order.query.filter_by(restaurant_id=restaurant_id).all()
     cents = Decimal("0.01")
     gross = sum(
-        Decimal(str(order.price or 0)) * Decimal(str(order.quantity or 1))
-        for order in orders
+        (Decimal(str(order.price or 0)) * Decimal(str(order.quantity or 1))
+        for order in orders),
+        start=Decimal("0"),
     ).quantize(cents, rounding=ROUND_HALF_UP)
+
     processed_gross = sum(
-        Decimal(str(payout.gross_amount or 0)) for payout in Payout.query.filter(
+        (Decimal(str(payout.gross_amount or 0)) for payout in Payout.query.filter(
             Payout.restaurant_id == restaurant_id,
             Payout.status.in_(["requested", "paid"]),
-        ).all()
+        ).all()),
+        start=Decimal("0"),
     ).quantize(cents, rounding=ROUND_HALF_UP)
     available_gross = max(Decimal("0"), gross - processed_gross).quantize(cents, rounding=ROUND_HALF_UP)
     platform_fee = (available_gross * Decimal("0.10")).quantize(cents, rounding=ROUND_HALF_UP)
