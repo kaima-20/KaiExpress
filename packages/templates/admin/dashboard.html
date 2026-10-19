@@ -1,127 +1,155 @@
 {% extends "base.html" %}
 
-{% block title %}Restaurant studio | KaiExpress{% endblock %}
+{% block title %}Restaurant dashboard | KaiExpress{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h1>Restaurant Dashboard</h1>
-    <p class="text-muted">View active orders and restaurant performance.</p>
-  </div>
-  <div>
-    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Back to User View</a>
-    <a href="{{ url_for('restaurant_profile') }}" class="btn btn-outline-secondary">Profile</a>
-    <a href="{{ url_for('restaurant_logout') }}" class="btn btn-outline-danger">Log out</a>
-  </div>
-</div>
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
-    <h3>Add a menu item</h3>
-    <form method="post" action="{{ url_for('add_menu_item') }}" class="row g-3">
-      <div class="col-md-4"><label class="form-label">Name</label><input class="form-control" name="title" required></div>
-      <div class="col-md-3"><label class="form-label">Price</label><input class="form-control" name="price" type="number" min="0.01" step="0.01" required></div>
-      <div class="col-md-5"><label class="form-label">Description</label><input class="form-control" name="description" required></div>
-      <div class="col-12"><button class="btn btn-primary" type="submit">Add to menu</button></div>
-    </form>
-  </div>
-</div>
-<div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
-  <div class="col"><div class="metric-card p-4 h-100"><span class="eyebrow text-primary">AVAILABLE PAYOUT</span><strong>${{ '%.2f'|format(payout_summary.available) }}</strong><small>after 10% platform fee</small></div></div>
-  <div class="col"><div class="metric-card p-4 h-100"><span class="eyebrow text-primary">GROSS SALES</span><strong>${{ '%.2f'|format(payout_summary.gross) }}</strong><small>from {{ orders|length }} order(s)</small></div></div>
-  <div class="col"><div class="metric-card p-4 h-100"><span class="eyebrow text-primary">PAYOUTS</span><strong>{{ payouts|length }}</strong><small>requests submitted</small></div></div>
-</div>
-<div class="card shadow-sm mb-4 payout-card">
-  <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
-    <div><h3 class="h5 mb-1">Get paid for your kitchen</h3><p class="text-body-secondary mb-0">Request your available balance whenever you are ready.</p></div>
-    <form method="post" action="{{ url_for('request_payout') }}"><button class="btn btn-primary" type="submit" {% if payout_summary.available <= 0 %}disabled{% endif %}>Request payout</button></form>
-  </div>
-</div>
-{% if payouts %}
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="h5 mb-0">Payout history</h3>
-      <a href="{{ url_for('api_payouts') }}" class="small text-decoration-none">View API data</a>
+<div class="restaurant-dashboard">
+  <header class="dashboard-heading">
+    <div>
+      <span class="eyebrow">Restaurant overview</span>
+      <h1>{{ current_user.name }}</h1>
+      <p>{{ current_user.cuisine }} kitchen <span aria-hidden="true">&middot;</span> {{ current_user.city }}</p>
     </div>
-    <div class="table-responsive">
-      <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Requested</th></tr></thead>
-        <tbody>
-          {% for payout in payouts %}
-          <tr>
-            <td class="font-monospace small">{{ payout.payment_reference or 'Pending reference' }}</td>
-            <td>${{ '%.2f'|format(payout.amount) }}</td>
-            <td><span class="badge text-bg-warning">{{ payout.status|capitalize }}</span></td>
-            <td>{{ payout.requested_at.strftime('%Y-%m-%d %H:%M') if payout.requested_at else 'Pending' }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-{% endif %}
-<div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
-  <div class="col">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">{{ current_user.name }}</h5>
-        <p class="card-text">Cuisine: {{ current_user.cuisine }}</p>
-        <p class="card-text">City: {{ current_user.city }}</p>
+    <nav class="dashboard-actions" aria-label="Restaurant actions">
+      <a class="btn btn-outline-dark" href="{{ url_for('restaurant_page', restaurant_id=current_user.id) }}">View storefront</a>
+      <a class="btn btn-outline-dark" href="{{ url_for('restaurant_profile') }}">Profile</a>
+    </nav>
+  </header>
+
+  <section class="dashboard-stats" aria-label="Restaurant performance">
+    <article class="dashboard-stat dashboard-stat-featured">
+      <span>Available payout</span>
+      <strong>${{ '%.2f'|format(payout_summary.available) }}</strong>
+      <small>After 10% platform fee</small>
+    </article>
+    <article class="dashboard-stat">
+      <span>Gross sales</span>
+      <strong>${{ '%.2f'|format(payout_summary.gross) }}</strong>
+      <small>{{ orders|length }} orders to date</small>
+    </article>
+    <article class="dashboard-stat">
+      <span>Menu items</span>
+      <strong>{{ menu|length }}</strong>
+      <small>Available on your storefront</small>
+    </article>
+    <article class="dashboard-stat">
+      <span>Pending payments</span>
+      <strong>{{ orders|selectattr('payment_status', 'equalto', 'pending')|list|length }}</strong>
+      <small>Awaiting customer payment</small>
+    </article>
+  </section>
+
+  <div class="dashboard-columns">
+    <section class="dashboard-panel dashboard-orders" aria-labelledby="recent-orders-title">
+      <div class="dashboard-panel-heading">
+        <div>
+          <span class="eyebrow">Keep service moving</span>
+          <h2 id="recent-orders-title">Recent orders</h2>
+        </div>
+        <span class="dashboard-count">{{ orders|length }} total</span>
       </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">My Menu</h5>
-        <ul class="list-group list-group-flush">
-          {% for item in menu %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>{{ item.title }}</span>
-            <span class="badge bg-primary rounded-pill">${{ '%.2f'|format(item.price) }}</span>
+      {% if orders %}
+      <div class="table-responsive">
+        <table class="table dashboard-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th scope="col">Customer</th>
+              <th scope="col">Order</th>
+              <th scope="col">Placed</th>
+              <th scope="col">Total</th>
+              <th scope="col">Payment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders[:8] %}
+            <tr>
+              <td>
+                <strong>{{ order.customer_name or 'Guest customer' }}</strong>
+                <small>Qty {{ order.quantity }}</small>
+              </td>
+              <td>{{ order.menu_item.title }}</td>
+              <td>{{ order.created_at.strftime('%b %d, %H:%M') if order.created_at else 'Just now' }}</td>
+              <td class="dashboard-order-total">${{ '%.2f'|format((order.price or 0) * (order.quantity or 1)) }}</td>
+              <td><span class="payment-status payment-status-{{ order.payment_status|lower }}">{{ order.payment_status|capitalize }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="dashboard-empty">
+        <span class="dashboard-empty-mark" aria-hidden="true">01</span>
+        <h3>Your first order will show up here</h3>
+        <p>Once a customer orders from your storefront, you can track it from this table.</p>
+        <a href="{{ url_for('restaurant_page', restaurant_id=current_user.id) }}">View your storefront <span aria-hidden="true">&rarr;</span></a>
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="dashboard-sidebar">
+      <section class="dashboard-panel dashboard-menu-panel" aria-labelledby="menu-title">
+        <div class="dashboard-panel-heading">
+          <div>
+            <span class="eyebrow">Your kitchen</span>
+            <h2 id="menu-title">Menu</h2>
+          </div>
+          <span class="dashboard-count">{{ menu|length }} items</span>
+        </div>
+        <ul class="dashboard-menu-list">
+          {% for item in menu[:5] %}
+          <li>
+            <span class="dashboard-menu-initial" aria-hidden="true">{{ item.title[:1]|upper }}</span>
+            <span class="dashboard-menu-name">{{ item.title }}<small>{{ item.description }}</small></span>
+            <strong>${{ '%.2f'|format(item.price) }}</strong>
           </li>
           {% else %}
-          <li class="list-group-item">No menu items yet.</li>
+          <li class="dashboard-menu-empty">No menu items yet. Add your first dish below.</li>
           {% endfor %}
         </ul>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="card shadow-sm">
-  <div class="card-body">
-    <h3>Recent Orders</h3>
-    {% if orders %}
-    <div class="table-responsive">
-      <table class="table table-bordered align-middle">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th>Payment</th>
-            <th>Ordered At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for order in orders %}
-          <tr>
-            <td>{{ order.customer_name }}</td>
-            <td>{{ order.menu_item.title }}</td>
-            <td>{{ order.quantity }}</td>
-            <td>${{ '%.2f'|format(order.price * order.quantity) }}</td>
-            <td>{{ order.payment_method or 'Card' }}<br><small class="text-muted">{{ order.payment_status|capitalize }}</small></td>
-            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-          </tr>
+        <form method="post" action="{{ url_for('add_menu_item') }}" class="dashboard-add-form">
+          <h3>Add a dish</h3>
+          <label for="menu-title-input">Dish name</label>
+          <input class="form-control" id="menu-title-input" name="title" maxlength="120" placeholder="e.g. Jollof rice" required>
+          <div class="dashboard-form-row">
+            <div>
+              <label for="menu-price-input">Price</label>
+              <input class="form-control" id="menu-price-input" name="price" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+            </div>
+            <div>
+              <label for="menu-description-input">Description</label>
+              <input class="form-control" id="menu-description-input" name="description" maxlength="500" placeholder="Short description" required>
+            </div>
+          </div>
+          <button class="btn btn-primary" type="submit">Add to menu <span aria-hidden="true">+</span></button>
+        </form>
+      </section>
+
+      <section class="dashboard-panel dashboard-payout-panel" aria-labelledby="payout-title">
+        <div class="dashboard-panel-heading">
+          <div>
+            <span class="eyebrow">Get paid</span>
+            <h2 id="payout-title">Payouts</h2>
+          </div>
+          <span class="dashboard-count">{{ payouts|length }} requests</span>
+        </div>
+        <p class="dashboard-payout-copy">Your available balance is ready when you are.</p>
+        <form method="post" action="{{ url_for('request_payout') }}">
+          <button class="btn btn-primary w-100" type="submit" {% if payout_summary.available <= 0 %}disabled{% endif %}>Request ${{ '%.2f'|format(payout_summary.available) }}</button>
+        </form>
+        {% if payouts %}
+        <ul class="dashboard-payout-list">
+          {% for payout in payouts[:3] %}
+          <li>
+            <span><strong>${{ '%.2f'|format(payout.amount) }}</strong><small>{{ payout.requested_at.strftime('%b %d, %Y') if payout.requested_at else 'Date pending' }}</small></span>
+            <span class="payment-status payment-status-{{ payout.status|lower }}">{{ payout.status|capitalize }}</span>
+          </li>
           {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="lead">No orders have been placed yet.</p>
-    {% endif %}
+        </ul>
+        {% else %}
+        <p class="dashboard-payout-empty">Payout requests will appear here.</p>
+        {% endif %}
+      </section>
+    </aside>
   </div>
 </div>
 {% endblock %}

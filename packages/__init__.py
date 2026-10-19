@@ -41,6 +41,8 @@ def create_app():
     app.config["PAYSTACK_SECRET_KEY"] = PAYSTACK_SECRET_KEY or ""
     app.config["PAYSTACK_PUBLIC_KEY"] = os.getenv("PAYSTACK_PUBLIC_KEY", "")
     app.config["PAYSTACK_TEST_MODE"] = True
+    app.config["ADMIN_EMAIL"] = os.getenv("ADMIN_EMAIL", "").strip().lower()
+    app.config["ADMIN_PASSWORD"] = os.getenv("ADMIN_PASSWORD", "")
 
     basedir = os.path.abspath(os.path.dirname(__file__))
     database_url = os.getenv("DATABASE_URL")

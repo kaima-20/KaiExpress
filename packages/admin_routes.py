@@ -1,10 +1,12 @@
 from flask import render_template, request, redirect, url_for, flash
+from flask import session
 from flask_login import (
     login_user,
     login_required,
     logout_user,
     current_user
 )
+import secrets
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import uuid4
@@ -52,6 +54,56 @@ def build_payout(restaurant_id, summary, Payout):
 
 
 def init_admin_routes(app, db, User, MenuItem, Order, Payout):
+    @app.route("/admin/login", methods=["GET", "POST"])
+    def platform_admin_login():
+        if session.get("platform_admin_authenticated"):
+            return redirect(url_for("platform_admin_dashboard"))
+
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            admin_email = app.config.get("ADMIN_EMAIL", "")
+            admin_password = app.config.get("ADMIN_PASSWORD", "")
+            if not admin_email or not admin_password:
+                flash("Platform admin access is not configured.", "danger")
+            elif secrets.compare_digest(email, admin_email) and secrets.compare_digest(password, admin_password):
+                session.clear()
+                session["platform_admin_authenticated"] = True
+                return redirect(url_for("platform_admin_dashboard"))
+            else:
+                flash("Invalid platform admin credentials.", "danger")
+        return render_template("admin/platform_login.html")
+
+    @app.route("/admin/logout")
+    def platform_admin_logout():
+        session.pop("platform_admin_authenticated", None)
+        return redirect(url_for("platform_admin_login"))
+
+    @app.route("/admin/dashboard")
+    def platform_admin_dashboard():
+        if not session.get("platform_admin_authenticated"):
+            flash("Sign in with your platform admin account to continue.", "warning")
+            return redirect(url_for("platform_admin_login"))
+
+        restaurants = User.query.filter_by(is_restaurant=True).order_by(User.name.asc()).limit(8).all()
+        recent_orders = Order.query.order_by(Order.created_at.desc()).limit(8).all()
+        recent_payouts = Payout.query.order_by(Payout.requested_at.desc()).limit(6).all()
+        paid_sales = db.session.query(
+            db.func.coalesce(db.func.sum(Order.price * Order.quantity), 0)
+        ).filter(Order.payment_status == "paid").scalar()
+        return render_template(
+            "admin/platform_dashboard.html",
+            customer_count=User.query.filter_by(is_restaurant=False).count(),
+            restaurant_count=User.query.filter_by(is_restaurant=True).count(),
+            order_count=Order.query.count(),
+            menu_count=MenuItem.query.count(),
+            paid_sales=paid_sales or 0,
+            pending_payout_count=Payout.query.filter_by(status="requested").count(),
+            restaurants=restaurants,
+            recent_orders=recent_orders,
+            recent_payouts=recent_payouts,
+        )
+
     @app.route("/restaurant/login", methods=["GET", "POST"])
     def restaurant_login():
         if current_user.is_authenticated and current_user.is_restaurant:

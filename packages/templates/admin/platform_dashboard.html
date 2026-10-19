@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Platform admin | KaiExpress{% endblock %}
+
+{% block content %}
+<div class="restaurant-dashboard platform-dashboard">
+  <header class="dashboard-heading">
+    <div>
+      <span class="eyebrow">KaiExpress control room</span>
+      <h1>Platform overview</h1>
+      <p>Network activity across customers, kitchens, and payments.</p>
+    </div>
+    <a class="btn btn-outline-dark" href="{{ url_for('home') }}">View public site</a>
+  </header>
+
+  <section class="dashboard-stats" aria-label="Platform metrics">
+    <article class="dashboard-stat dashboard-stat-featured">
+      <span>Paid sales</span>
+      <strong>${{ '%.2f'|format(paid_sales) }}</strong>
+      <small>Confirmed customer payments</small>
+    </article>
+    <article class="dashboard-stat">
+      <span>Orders</span>
+      <strong>{{ order_count }}</strong>
+      <small>Across all restaurant partners</small>
+    </article>
+    <article class="dashboard-stat">
+      <span>Restaurant partners</span>
+      <strong>{{ restaurant_count }}</strong>
+      <small>{{ menu_count }} menu items listed</small>
+    </article>
+    <article class="dashboard-stat">
+      <span>Customers</span>
+      <strong>{{ customer_count }}</strong>
+      <small>{{ pending_payout_count }} payout requests to review</small>
+    </article>
+  </section>
+
+  <div class="dashboard-columns">
+    <section class="dashboard-panel dashboard-orders" aria-labelledby="platform-orders-title">
+      <div class="dashboard-panel-heading">
+        <div>
+          <span class="eyebrow">Network activity</span>
+          <h2 id="platform-orders-title">Recent orders</h2>
+        </div>
+        <span class="dashboard-count">{{ order_count }} total</span>
+      </div>
+      {% if recent_orders %}
+      <div class="table-responsive">
+        <table class="table dashboard-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th scope="col">Order</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Restaurant</th>
+              <th scope="col">Item</th>
+              <th scope="col">Total</th>
+              <th scope="col">Payment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in recent_orders %}
+            <tr>
+              <td>#{{ order.id }}<small>{{ order.created_at.strftime('%b %d, %H:%M') if order.created_at else 'Date pending' }}</small></td>
+              <td>{{ order.customer_name or 'Guest customer' }}</td>
+              <td>{{ order.restaurant.name if order.restaurant else 'Unknown kitchen' }}</td>
+              <td>{{ order.menu_item.title if order.menu_item else 'Unknown item' }}</td>
+              <td class="dashboard-order-total">${{ '%.2f'|format((order.price or 0) * (order.quantity or 1)) }}</td>
+              <td><span class="payment-status payment-status-{{ order.payment_status|lower }}">{{ order.payment_status|capitalize }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="dashboard-empty">
+        <h3>No orders yet</h3>
+        <p>Orders from every restaurant will appear here.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="dashboard-sidebar">
+      <section class="dashboard-panel dashboard-payout-panel" aria-labelledby="platform-payouts-title">
+        <div class="dashboard-panel-heading">
+          <div>
+            <span class="eyebrow">Partner settlements</span>
+            <h2 id="platform-payouts-title">Payout requests</h2>
+          </div>
+          <span class="dashboard-count">{{ pending_payout_count }} pending</span>
+        </div>
+        {% if recent_payouts %}
+        <ul class="dashboard-payout-list">
+          {% for payout in recent_payouts %}
+          <li>
+            <span>
+              <strong>{{ payout.restaurant.name if payout.restaurant else 'Unknown kitchen' }}</strong>
+              <small>${{ '%.2f'|format(payout.amount) }} · {{ payout.payment_reference or 'Reference pending' }} · {{ payout.requested_at.strftime('%b %d, %Y') if payout.requested_at else 'Date pending' }}</small>
+            </span>
+            <span class="payment-status payment-status-{{ payout.status|lower }}">{{ payout.status|capitalize }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="dashboard-payout-empty">No payout requests have been submitted.</p>
+        {% endif %}
+      </section>
+
+      <section class="dashboard-panel" aria-labelledby="platform-restaurants-title">
+        <div class="dashboard-panel-heading">
+          <div>
+            <span class="eyebrow">Partner network</span>
+            <h2 id="platform-restaurants-title">Restaurants</h2>
+          </div>
+          <span class="dashboard-count">{{ restaurant_count }} total</span>
+        </div>
+        {% if restaurants %}
+        <ul class="dashboard-menu-list">
+          {% for restaurant in restaurants %}
+          <li>
+            <span class="dashboard-menu-initial" aria-hidden="true">{{ restaurant.name[:1]|upper }}</span>
+            <span class="dashboard-menu-name">{{ restaurant.name }}<small>{{ restaurant.cuisine }} · {{ restaurant.city }}</small></span>
+            <strong>{{ restaurant.menu_items|length }}</strong>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="dashboard-payout-empty">No restaurant partners yet.</p>
+        {% endif %}
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

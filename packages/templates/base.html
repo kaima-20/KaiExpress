@@ -30,7 +30,10 @@
             <li class="nav-item"><a class="nav-link {% if request.endpoint == 'menu_page' %}active{% endif %}" href="{{ url_for('menu_page') }}">Menu</a></li>
             <li class="nav-item"><a class="nav-link {% if request.endpoint == 'about_page' %}active{% endif %}" href="{{ url_for('about_page') }}">About</a></li>
             <li class="nav-item"><a class="nav-link {% if request.endpoint == 'contact_page' %}active{% endif %}" href="{{ url_for('contact_page') }}">Contact</a></li>
-            {% if current_user.is_authenticated %}
+            {% if session.get('platform_admin_authenticated') %}
+              <li class="nav-item"><a class="nav-link {% if request.endpoint == 'platform_admin_dashboard' %}active{% endif %}" href="{{ url_for('platform_admin_dashboard') }}">Admin dashboard</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('platform_admin_logout') }}">Log out</a></li>
+            {% elif current_user.is_authenticated %}
               {% if current_user.is_restaurant %}
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant_dashboard') }}">Dashboard</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant_profile') }}">Profile</a></li>
@@ -42,6 +45,7 @@
             {% else %}
               <li class="nav-item ms-lg-2"><a class="btn btn-light btn-sm nav-account-button" href="{{ url_for('login') }}">Sign in</a></li>
               <li class="nav-item"><a class="nav-link" href="{{ url_for('restaurant_login') }}">For restaurants</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('platform_admin_login') }}">Platform admin</a></li>
             {% endif %}
           </ul>
         </div>
